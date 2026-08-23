@@ -11,6 +11,7 @@ authors = [
 requires-python = ">=3.10"
 dependencies = [
     "mcp>=2,<3",
+    "youtube-transcript-api>=1.2.4",
 ]
 keywords = ["anki", "mcp", "flashcards", "spaced-repetition", "model-context-protocol"]
 classifiers = [

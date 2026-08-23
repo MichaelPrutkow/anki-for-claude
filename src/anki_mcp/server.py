@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, timedelta
 from typing import Annotated, Any
 
 from mcp.server import MCPServer
@@ -96,33 +97,38 @@ class NoteInput(BaseModel):
 
 
 class AddResult(BaseModel):
-    dry_run: bool
-    batch_id: str | None  # None if dry run
+    batch_id: str | None
     note_count: int
-    note_ids: list[int] = []  # Empty if dry run
-    failed_indices: list[int] = []  # Empty if dry run
+    note_ids: list[int] = []
+    failed_indices: list[int] = []
 
 
-@mcp.tool(title="Add Notes", annotations=myConsts.ADDS_NEW)
-def add_notes(
+active_drafts: dict[str, dict[str, Any]] = {}
+
+
+@mcp.tool(title="Create Draft Batch", annotations=myConsts.ADDS_NEW)
+def create_draft_batch(
     deck: str,
     note_type: str,
-    notes: Annotated[list[NoteInput], Field(min_length=1, max_length=50)],
+    notes: Annotated[
+        list[NoteInput] | None, Field(default=None, min_length=1, max_length=50)
+    ] = None,
     tags: list[str] | None = None,
-    dry_run: bool = True,
     allow_duplicate: bool = False,
-) -> AddResult:
-    """Adds notes to a single deck using a single note type.
+) -> str:
+    """
+    Start a new draft batch and optionally fill it in the same call.
 
-    - dry_run defaults to True: nothing is written, the call only reports wether the
-    notes would be accepted. Show that result to the user and give him a preview of the cards
-    you created in the Chat, then call again with dry_run=False to actually create them.
+    A draft is validated but NOT written to Anki. It exists only in this server's
+    memory and disapears when the server restarts. Pas the notes right here unless you need
+    to build the batch across several calls.
 
-    - The keys in each note's fields must match the note types's field names. Use
-    'describe_note_type' first if unsure!
+    Returns the draft_id. Pass it to 'add_to_draft' to append more notes, or to 'commit_draft'
+    to write everything to Anki.
 
-    - Every Created note ir tagged 'mcp::batch::<batch_id>'. The returned batch_id can be
-    passed to undo_batch to remove the whole batch again if User is unsatisfied etc.
+    Fails if the deck or the note type does not exist.
+
+    Drafts are deleted from servers memory after 30 Minutes, if not used.
     """
 
     decks = list_decks()
@@ -135,6 +141,48 @@ def add_notes(
     if note_type not in models:
         raise Exception(f"Note type '{note_type}' not found. Available: {models}")
 
+    for id, draft in list(active_drafts.items()):
+        time_diff: timedelta = datetime.now() - draft["created_at"]
+        if time_diff.total_seconds() > 1800:
+            del active_drafts[id]
+
+    draft_id = f"draft_{uuid.uuid4().hex[:8]}"
+    active_drafts[draft_id] = {
+        "created_at": datetime.now(),
+        "deck": deck,
+        "note_type": note_type,
+        "shared_tags": tags or [],
+        "allow_duplicate": allow_duplicate,
+        "notes": notes or [],
+    }
+
+    return draft_id
+
+
+@mcp.tool(title="Add Notes to Draft", annotations=myConsts.ADDS_NEW)
+def add_to_draft(
+    draft_id: str,
+    notes: Annotated[list[NoteInput], Field(min_length=1, max_length=50)],
+) -> str:
+    """
+    Append notes to an existing draft. Nothing is written to Anki.
+
+    Every note is validated against the note type's field names and checked for duplicates
+    before it enters the draft. If any note fails, NONE are appended and the eror names every
+    problem at once, so you can fix them in one go.
+
+    Calling this twice with the same notes appends them twice. Use it to build a large batch
+    across multiple calls, not to retry a failed call.
+    """
+
+    if draft_id not in active_drafts:
+        raise Exception(
+            f"Draft '{draft_id}' does not exist. Call 'create_draft_batch' to create a new one"
+        )
+
+    draft = active_drafts[draft_id]
+
+    note_type = draft["note_type"]
     valid: list[str] = invoke("modelFieldNames", modelName=note_type)
     valid_lower = {v.lower() for v in valid}
     unknown: dict[str, list[int]] = {}
@@ -148,25 +196,26 @@ def add_notes(
         )
         raise Exception(f"{msg1} \nThe only valid fields currently are: {valid}")
 
-    anki_notes = [
+    test_anki_notes = [
         {
-            "deckName": deck,
-            "modelName": note_type,
+            "deckName": draft["deck"],
+            "modelName": draft["note_type"],
             "fields": n.fields,
             "options": {
-                "allowDuplicate": allow_duplicate,
+                "allowDuplicate": draft["allow_duplicate"],
             },
-            "tags": [*(tags or []), *n.tags],
+            "tags": [*draft["shared_tags"], *n.tags],  # add note specific tags
         }
         for n in notes
     ]
 
-    status_and_details = invoke("canAddNotesWithErrorDetail", notes=anki_notes)
+    status_and_details = invoke("canAddNotesWithErrorDetail", notes=test_anki_notes)
     errors: dict[str, list[int]] = {}
     for i, detail in enumerate(status_and_details):
         if detail["canAdd"]:
             continue
         errors.setdefault(detail["error"], []).append(i)
+
     if errors:
         msg2 = ", ".join(
             [f"Error '{key}' in notes '{val}' " for key, val in errors.items()]
@@ -175,8 +224,38 @@ def add_notes(
             f"{msg2} \nPlease try fixing these Errors, the Errormessages may contain Hints"
         )
 
-    if dry_run:
-        return AddResult(dry_run=True, batch_id=None, note_count=len(notes))
+    draft["notes"].extend(test_anki_notes)
+
+    count = len(draft["notes"])
+    return f"Added {len(notes)} Notes. Draft '{draft_id}' now containts {count} Notes. Call 'commit_draft' to add Notes to the Users Deck"
+
+
+@mcp.tool(title="Commit Draft", annotations=myConsts.ADDS_NEW)
+def commit_draft(draft_id: str) -> AddResult:
+    """
+    Write a draft to Anki. This is the only tool in this workflow that changes the collection.
+
+    Do not call this on your own initiative. Present the drafted cards to the user first and wait for
+    their approval.
+
+    Every note gets tagged 'mcp::batch::<batch_id>'. The returned batch_id can be passed to 'undo_batch'
+    to remove the entire batch again.
+
+    The draft is consumed and no longer exists afterwards.
+    """
+
+    if draft_id not in active_drafts:
+        raise Exception(
+            f"Draft '{draft_id}' does not exist. Call 'create_draft_batch' to create a new one."
+        )
+
+    draft = active_drafts.pop(draft_id)
+    anki_notes = draft["notes"]
+
+    if not anki_notes:
+        raise Exception(
+            f"Draft {draft_id} is empty / does not contain any notes. However this Draft was now deleted"
+        )
 
     batch_id = uuid.uuid4().hex[:8]
     batch_tags = ["mcp::created", f"mcp::batch::{batch_id}"]
@@ -190,7 +269,6 @@ def add_notes(
     failed_indices = [i for i, r in enumerate(result) if r is None]
 
     return AddResult(
-        dry_run=False,
         batch_id=batch_id,
         note_count=len(note_ids),
         note_ids=note_ids,
