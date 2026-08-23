@@ -242,3 +242,7 @@ def make_cards(source: str, deck: str, tags: str = "") -> str:
         f"<target>\ndeck: {deck} \ntags: {tags or '(none)'}\n</target>\n\n"
         f"<source>\n{source}\n</source>"
     )
+
+
+if __name__ == "__main__":
+    mcp.run()

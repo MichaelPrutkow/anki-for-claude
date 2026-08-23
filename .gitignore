@@ -12,3 +12,5 @@ wheels/
 .env
 
 .vscode
+
+bundle/

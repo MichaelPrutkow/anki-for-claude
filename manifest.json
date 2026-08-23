@@ -1,0 +1,78 @@
+{
+    "manifest_version": "0.4",
+    "name": "anki-mcp-server",
+    "display_name": "Anki",
+    "icon": "icon.png",
+    "version": "0.1.0",
+    "description": "Create and maintain Anki flashcards from Claude",
+    "long_description": "Erzeugt Karteikarten aus Vorlesungsmaterial, durchsucht die Sammlung und macht ganze Chargen wieder rückgängig. Braucht Anki mit dem AnkiConnect-Add-on.",
+    "author": {
+        "name": "Michael Prutkow",
+        "email": "michael.prutkow@tum.de"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/MichaelPrutkow/anki-mcp-server"
+    },
+    "homepage": "https://github.com/MichaelPrutkow/anki-mcp-server",
+    "license": "MIT",
+    "keywords": [
+        "anki",
+        "flashcards",
+        "spaced-repetition"
+    ],
+    "server": {
+        "type": "uv",
+        "entry_point": "src/anki_mcp/server.py",
+        "mcp_config": {
+            "command": "uv",
+            "args": [
+                "run",
+                "--directory",
+                "${__dirname}",
+                "src/anki_mcp/server.py"
+            ]
+        }
+    },
+    "compatibility": {
+        "platforms": [
+            "darwin",
+            "win32",
+            "linux"
+        ],
+        "runtimes": {
+            "python": ">=3.10"
+        }
+    },
+    "tools": [
+        {
+            "name": "list_decks",
+            "description": "List all decks with their IDs"
+        },
+        {
+            "name": "describe_note_type",
+            "description": "Field names of a note type"
+        },
+        {
+            "name": "create_deck",
+            "description": "Create a deck"
+        },
+        {
+            "name": "search_notes",
+            "description": "Search notes with Anki search syntax"
+        },
+        {
+            "name": "add_notes",
+            "description": "Add notes, dry run by default"
+        },
+        {
+            "name": "undo_batch",
+            "description": "Delete a batch created by this server"
+        },
+        {
+            "name": "update_note_fields",
+            "description": "Change fields of one note"
+        }
+    ],
+    "prompts_generated": true
+}
