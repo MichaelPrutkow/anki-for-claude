@@ -198,24 +198,17 @@ flowchart TD
     style LIVE fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#1f2328
 ```
 
-Everything above the gate is free. Claude can draft, validate, throw cards away and draft again
-without your collection ever noticing. In a typical run it keeps 11 of 17 candidates and tells
-you why it dropped the rest.
-
 ## Safety
 
 > [!IMPORTANT]
 > This server writes to your real collection. Make a backup before the first run:
 > ***File → Export → Anki Collection Package***.
 
-What the server will not do:
+What the server will not do however:
 
 - Write anything without an explicit `commit_draft`
 - Delete a note it did not create
 - Edit a note it did not create, unless you approve `force=True`
-
-What it can still do wrong: `undo_batch` deletes cards including their review history. If you
-have reviewed a batch for two weeks and then undo it, that history is gone.
 
 ## Known limits
 
@@ -225,7 +218,7 @@ have reviewed a batch for two weeks and then undo it, that history is gone.
 - **Duplicate detection follows Anki's rule**: only the first field of a note type is compared.
   Two cards with the same question and different answers count as duplicates.
 - **No image support yet.** Extracting figures from PDFs and building image-occlusion cards is
-  planned, not built.
+  planned, not built (but I'm planning on adding this in the future)
 
 ## Development
 
@@ -250,12 +243,12 @@ Build the `.mcpb` bundle (requires Node for `npx`):
 The script refuses to build if `pyproject.toml` and `manifest.json` disagree on the version, or
 if the bundled sources drift from `src/`.
 
+## Personal AI Use
+I wrote almost all of this code myself because I wanted to use this project to learn. I did use some AI assistance, but strictly for formulating my ideas for the long system prompt and this README, as well as for minor bug fixes and some helper functions.
+
+
 ## Credits
 
 - [AnkiConnect](https://git.sr.ht/~foosoft/anki-connect) by foosoft, the add-on this talks to
 - [youtube-transcript-api](https://github.com/jdepoix/youtube-transcript-api) by jdepoix
-- The card-design rules were drafted with help from Claude Opus 5
 
-## License
-
-MIT
