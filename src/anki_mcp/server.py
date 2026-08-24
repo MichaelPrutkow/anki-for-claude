@@ -145,9 +145,10 @@ def create_draft_batch(
         "note_type": note_type,
         "shared_tags": tags or [],
         "allow_duplicate": allow_duplicate,
-        "notes": notes or [],
+        "notes": [],
     }
-
+    if notes:
+        add_to_draft(draft_id=draft_id, notes=notes)
     return draft_id
 
 
@@ -335,7 +336,7 @@ def update_note_fields(note_id: int, fields: dict[str, str]) -> dict[str, str]:
     return before
 
 
-active_videos: dict[str, YouTubeVideoData] = {}
+active_videos: dict[tuple[str, str], YouTubeVideoData] = {}
 
 
 @mcp.tool(title="Read Transcript from YouTube Video", annotations=myConsts.READ_ONLY)
@@ -351,23 +352,37 @@ def extract_youtube_video_transcript(
         ),
     ] = None,
     targetlanguage: Annotated[
-        str | None, Field(default="en", description="Specify target language if needed")
-    ] = None,
-):
+        str,
+        Field(
+            default="en", description="Specify target language if needed", min_length=1
+        ),
+    ] = "en",
+) -> str:
     """
     Extracts transcript from a YouTube video. If the video is long, it returns an outline.
     You MUST then call this tool again with SAME url and specific 'intervals' to read the relevant
     parts before creating Anki cards with the Context created.
+
+    If you call this Tool without Intervals, you will receive the complete Transcript, unless
+    of course the video is too long - in which case you will receive an Outline and should call again.
     """
 
-    if url in active_videos:
-        vid = active_videos[url]
+    if (url, targetlanguage) in active_videos:
+        vid = active_videos[url, targetlanguage]
     else:
-        vid: YouTubeVideoData = (
-            get_youtube_data(url, targetlanguage)
-            if targetlanguage
-            else get_youtube_data(url)
+        cached_lang = next(
+            lang for cached_url, lang in active_videos if cached_url == url
         )
+
+        if cached_lang:
+            raise Exception(
+                f"The requested URL is already in the local cache, but with a different language: {cached_lang}"
+                "\n"
+                f"Please call the tool again using targetlanguage='{cached_lang}' to use the cached version"
+            )
+
+        vid: YouTubeVideoData = get_youtube_data(url, targetlanguage)
+        active_videos[url, targetlanguage] = vid
 
     if intervals:
         return extract_Segments(vid, intervals)

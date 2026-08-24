@@ -123,14 +123,26 @@ def extract_Segments(data: YouTubeVideoData, intervals: list[TimeInterval]) -> s
     if not result_blocks:
         return f"No Text was found in the requested Intervals: {intervals}"
 
-    return "\n\n".join(result_blocks)
+    b = data.is_translated
+    return (
+        "\n\n".join(result_blocks)
+        + f"\n\n{'Warning: These Snippets are translated' if b else 'These Snippets are not translated'}"
+    )
 
 
 def extract_outline(data: YouTubeVideoData) -> str:
     outline = [f"[{s.formatted_time}]: {s.text_snippet}" for s in data.outline]
-    return "\n\n".join(outline)
+    b = data.is_translated
+    return (
+        "\n\n".join(outline)
+        + f"\n\n{'Warning: This Outline is translated' if b else 'This Outline is not translated'}"
+    )
 
 
 def extract_full_transcript(data: YouTubeVideoData) -> str:
     transcript = [s.text for s in data.transcript]
-    return " ".join(transcript)
+    b = data.is_translated
+    return (
+        " ".join(transcript)
+        + f"\n\n{'Warning: This Transcript is translated' if b else 'This Transcript is not translated'}"
+    )
