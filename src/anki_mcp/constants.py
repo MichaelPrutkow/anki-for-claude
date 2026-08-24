@@ -38,6 +38,19 @@ OVERWRITES = ToolAnnotations(
     open_world_hint=False,
 )
 
+
+INSTRUCTIONS = """\
+This server writes to the user's real Anki collection.
+
+When the user asks for flashcards, Anki cards, or a deck from any material:
+1. Call 'get_card_rules' FIRST. Do not write cards from memory. The rules are long,
+   specific and non-obvious, and cards written without them look fine but fail in review.
+2. Never call 'commit_draft' without showing the drafted cards and getting approval.
+
+For anything else (searching, listing, fixing one card) use the tools directly.
+"""
+
+
 ANKI_SEARCH_RULES = r""" MUST follow Anki's strict search syntax:
 1. BASIC LOGIC:
 - Space = AND (e.g., 'dog cat' -> contains both)

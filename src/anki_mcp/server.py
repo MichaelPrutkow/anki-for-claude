@@ -22,7 +22,9 @@ from anki_mcp.youtube_api import (
     get_youtube_data,
 )
 
-mcp = MCPServer("anki", version=version("anki-mcp-server"))
+mcp = MCPServer(
+    "anki", version=version("anki-mcp-server"), instructions=myConsts.INSTRUCTIONS
+)
 
 
 @mcp.tool(title="List Decks", annotations=myConsts.READ_ONLY)
@@ -117,6 +119,8 @@ def create_draft_batch(
     allow_duplicate: bool = False,
 ) -> str:
     """
+    IMPORTANT: If you have not called 'get_card_rules' in this conversation, do that before drafting.
+
     Start a new draft batch and optionally fill it in the same call.
 
     A draft is validated but NOT written to Anki. It exists only in this server's
@@ -443,6 +447,16 @@ def sync() -> str:
     """Pusheds the collection to AnkiWeb so the new cards reach he users's phone."""
     invoke("sync")
     return "Sync started"
+
+
+@mcp.tool(title="Card design rules", annotations=myConsts.READ_ONLY)
+def get_card_rules() -> str:
+    """
+    Returns the rules for writing Anki cards: what is worth remembering at all, how
+    to handle LaTex and cloze syntax, and the draft/commit workflow.
+    Call this once before writing any cards.
+    """
+    return myConsts.CARD_RULES
 
 
 @mcp.prompt(title="Create Cards from Context")

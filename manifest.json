@@ -94,6 +94,10 @@
         {
             "name": "sync",
             "description": "Sync with AnkiWeb, making results available on mobile"
+        },
+        {
+            "name": "get_card_rules",
+            "description": "System Prompt: listing all workflow and design rules. Must be followed!"
         }
     ],
     "prompts_generated": true
