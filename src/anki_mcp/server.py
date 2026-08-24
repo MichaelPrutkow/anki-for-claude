@@ -3,10 +3,15 @@ from datetime import datetime, timedelta
 from typing import Annotated, Any
 
 from mcp.server import MCPServer
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 import anki_mcp.constants as myConsts
 from anki_mcp.anki import invoke
+from anki_mcp.models import (
+    AddResult,
+    NoteInput,
+    SearchResult,
+)
 
 mcp = MCPServer("anki")
 
@@ -52,13 +57,6 @@ def describe_note_type(name: str | None = None) -> list[str]:
     return invoke("modelFieldNames", modelName=name)
 
 
-class SearchResult(BaseModel):
-    query: str
-    total_found: int
-    note_ids: list[int]
-    notes: list[dict[str, Any]] = []
-
-
 @mcp.tool(title="Search for Notes", annotations=myConsts.READ_ONLY)
 def search_notes(
     query: Annotated[str, Field(description=myConsts.ANKI_SEARCH_RULES)],
@@ -87,20 +85,6 @@ def search_notes(
     return SearchResult(
         query=query, total_found=len(ids), note_ids=selected, notes=notes
     )
-
-
-class NoteInput(BaseModel):
-    fields: dict[str, str] = Field(
-        description="Keys must match the note type's field names exactly"
-    )
-    tags: list[str] = Field(default=[], description="Extra tags for this note only")
-
-
-class AddResult(BaseModel):
-    batch_id: str | None
-    note_count: int
-    note_ids: list[int] = []
-    failed_indices: list[int] = []
 
 
 active_drafts: dict[str, dict[str, Any]] = {}
