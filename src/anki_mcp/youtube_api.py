@@ -7,7 +7,12 @@ from youtube_transcript_api import (
     YouTubeTranscriptApi,
 )
 
-from anki_mcp.models import OutlineSegment, TranscriptSegment, YouTubeVideoData
+from anki_mcp.models import (
+    OutlineSegment,
+    TimeInterval,
+    TranscriptSegment,
+    YouTubeVideoData,
+)
 
 
 def extract_video_id(url: str) -> str | None:
@@ -24,7 +29,7 @@ def format_seconds(seconds: float) -> str:
     return f"{h:02d}:{m:02d}:{s:02d}" if h > 0 else f"{m:02d}:{s:02d}"
 
 
-def get_youtube_data(url: str, target_language: str = "en") -> YouTubeVideoData | None:
+def get_youtube_data(url: str, target_language: str = "en") -> YouTubeVideoData:
     video_id = extract_video_id(url)
     if not video_id:
         raise ValueError(f"Invalid YouTube URL. ID was not found: {url}")
@@ -95,3 +100,37 @@ def get_youtube_data(url: str, target_language: str = "en") -> YouTubeVideoData 
         outline=outline,
         transcript=full_transcript,
     )
+
+
+def extract_Segments(data: YouTubeVideoData, intervals: list[TimeInterval]) -> str:
+    result_blocks = []
+
+    for interval in intervals:
+        chunk_texts = []
+        for segment in data.transcript:
+            if (
+                segment.start_time <= interval.end_sec
+                and segment.end_time >= interval.start_sec
+            ):
+                chunk_texts.append(segment.text)
+
+        if chunk_texts:
+            block_text = " ".join(chunk_texts)
+            result_blocks.append(
+                f"Interval from {interval.start_sec}s to {interval.end_sec}s \n {block_text}"
+            )
+
+    if not result_blocks:
+        return f"No Text was found in the requested Intervals: {intervals}"
+
+    return "\n\n".join(result_blocks)
+
+
+def extract_outline(data: YouTubeVideoData) -> str:
+    outline = [f"[{s.formatted_time}]: {s.text_snippet}" for s in data.outline]
+    return "\n\n".join(outline)
+
+
+def extract_full_transcript(data: YouTubeVideoData) -> str:
+    transcript = [s.text for s in data.transcript]
+    return " ".join(transcript)

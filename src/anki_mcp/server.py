@@ -11,6 +11,14 @@ from anki_mcp.models import (
     AddResult,
     NoteInput,
     SearchResult,
+    TimeInterval,
+    YouTubeVideoData,
+)
+from anki_mcp.youtube_api import (
+    extract_full_transcript,
+    extract_outline,
+    extract_Segments,
+    get_youtube_data,
 )
 
 mcp = MCPServer("anki")
@@ -325,6 +333,50 @@ def update_note_fields(note_id: int, fields: dict[str, str]) -> dict[str, str]:
     before = {k: v["value"] for k, v in info[0]["fields"].items()}
     invoke("updateNoteFields", note={"id": note_id, "fields": fields})
     return before
+
+
+active_videos: dict[str, YouTubeVideoData] = {}
+
+
+@mcp.tool(title="Read Transcript from YouTube Video", annotations=myConsts.READ_ONLY)
+def extract_youtube_video_transcript(
+    url: str,
+    intervals: Annotated[
+        list[TimeInterval] | None,
+        Field(
+            default=None,
+            description="Pick important Parts from Video",
+            min_length=1,
+            max_length=30,
+        ),
+    ] = None,
+    targetlanguage: Annotated[
+        str | None, Field(default="en", description="Specify target language if needed")
+    ] = None,
+):
+    """
+    Extracts transcript from a YouTube video. If the video is long, it returns an outline.
+    You MUST then call this tool again with SAME url and specific 'intervals' to read the relevant
+    parts before creating Anki cards with the Context created.
+    """
+
+    if url in active_videos:
+        vid = active_videos[url]
+    else:
+        vid: YouTubeVideoData = (
+            get_youtube_data(url, targetlanguage)
+            if targetlanguage
+            else get_youtube_data(url)
+        )
+
+    if intervals:
+        return extract_Segments(vid, intervals)
+
+    if vid.total_length_seconds > 900:
+        msg = "The Video is too long! Analyse the Outline and call 'extract_youtube_video_transcript' again, but INCLUDING time intervals"
+        return f"{msg}. \nOutline:\n{extract_outline(vid)}"
+
+    return extract_full_transcript(vid)
 
 
 @mcp.prompt(title="Create Cards from Context")
