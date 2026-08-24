@@ -153,31 +153,34 @@ five that change anything.
 
 ```mermaid
 flowchart TD
-    U["You<br>Make cards from this lecture, deck MA0901"]
+    U["You<br>Make cards from this lecture, deck:  'XYZ'"]
 
     subgraph SAFE["&nbsp;Nothing touches your collection yet&nbsp;"]
-        direction TB
-        R["get_card_rules<br>Claude loads the card design rules"]
-        N["describe_note_type<br>exact field names for the note type"]
-        D["create_draft_batch<br>validates deck, fields and duplicates"]
-        P["Cards appear in the chat<br>every field, exactly as it will look"]
+        direction LR
+        R["get_card_rules<br>the card design rules"]
+        N["describe_note_type<br>exact field names"]
+        D["create_draft_batch<br>validates deck, fields, duplicates"]
+        P["Cards appear in the chat<br>every field, as it will look"]
         R --> N --> D --> P
     end
 
-    U --> R
-    P --> Q{"You approve?"}
-    Q -->|Card 7 is too long| D
+    Q{"You approve?"}
 
     subgraph LIVE["&nbsp;Written to your collection&nbsp;"]
-        direction TB
+        direction LR
         C["commit_draft<br>the only tool that writes"]
         A["11 cards in Anki<br>tagged mcp::batch::4f2a91c3"]
-        Y["sync<br>on your phone before you close the laptop"]
+        Y["sync<br>on your phone"]
         C --> A --> Y
     end
 
-    Q -->|Go| C
-    A -.->|Changed your mind| Z["undo_batch 4f2a91c3<br>removes all 11 again"]
+    Z["undo_batch 4f2a91c3<br>removes all 11 again"]
+
+    U --> R
+    P --> Q
+    Q -->|"Needs changes"| D
+    Q -->|"Go"| C
+    A -.->|"Changed your mind"| Z
 
     classDef you fill:#0969da,stroke:#0550ae,color:#ffffff
     classDef step fill:#f6f8fa,stroke:#8c959f,color:#1f2328
