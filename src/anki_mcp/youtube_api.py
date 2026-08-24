@@ -68,29 +68,29 @@ def get_youtube_data(url: str, target_language: str = "en") -> YouTubeVideoData:
     full_transcript: list[TranscriptSegment] = []
     outline: list[OutlineSegment] = []
 
-    interval_seconds = 300  # 5 Minutes
-    current_interval = 0
-
     for snippet in raw_data.snippets:
         start = snippet.start
         end = snippet.start + snippet.duration
         text = snippet.text.strip()
-
         full_transcript.append(
             TranscriptSegment(start_time=start, end_time=end, text=text)
         )
-
-        if start >= current_interval * interval_seconds:
-            outline.append(
-                OutlineSegment(
-                    timestamp_seconds=start,
-                    formatted_time=format_seconds(start),
-                    text_snippet=text,
-                )
-            )
-            current_interval += 1
-
     total_length = full_transcript[-1].end_time if full_transcript else 0.0
+
+    bucket = -1
+    for i, seg in enumerate(full_transcript):
+        b = int(seg.start_time // 90)
+        if b == bucket:
+            continue
+        bucket = b
+        words = " ".join(s.text for s in full_transcript[i : i + 15]).split()[:25]
+        outline.append(
+            OutlineSegment(
+                timestamp_seconds=seg.start_time,
+                formatted_time=format_seconds(seg.start_time),
+                text_snippet=" ".join(words),
+            )
+        )
 
     return YouTubeVideoData(
         video_id=video_id,

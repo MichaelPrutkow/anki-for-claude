@@ -6,6 +6,8 @@ from typing import Any
 ANKI_URL = "http://127.0.0.1:8765"
 API_VERSION = 6
 
+TIMEOUT = 30
+
 
 def request(action: str, **params: Any) -> dict[str, Any]:
     return {"action": action, "params": params, "version": API_VERSION}
@@ -16,13 +18,17 @@ def invoke(action: str, **params: Any):
     try:
         response = json.load(
             urllib.request.urlopen(
-                urllib.request.Request(ANKI_URL, request_json), timeout=10
+                urllib.request.Request(ANKI_URL, request_json), timeout=TIMEOUT
             )
         )
-    except urllib.error.URLError as exc:
+    except (urllib.error.URLError, TimeoutError) as exc:
         raise Exception(
             f"AnkiConnect does not answer at {ANKI_URL}"
             "\nIs Anki running currently, and is there no Dialoguewindow open?"
+        ) from exc
+    except json.JSONDecodeError as exc:
+        raise Exception(
+            f"The answer from {ANKI_URL} is not JSON. Is AnkiConnect really running there?"
         ) from exc
     if len(response) != 2:
         raise Exception("response has an unexpected number of fields")

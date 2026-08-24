@@ -3,9 +3,9 @@
     "name": "anki-mcp-server",
     "display_name": "Anki",
     "icon": "icon.png",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "description": "Create and maintain Anki flashcards from Claude",
-    "long_description": "Erzeugt Karteikarten aus Vorlesungsmaterial, durchsucht die Sammlung und macht ganze Chargen wieder rückgängig. Braucht Anki mit dem AnkiConnect-Add-on.",
+    "long_description": "Generates flashcards from lecture material, searches the collection, and undoes entire batches. Requires Anki with the AnkiConnect add-on.",
     "author": {
         "name": "Michael Prutkow",
         "email": "michael.prutkow@tum.de"
@@ -30,7 +30,9 @@
                 "run",
                 "--directory",
                 "${__dirname}",
-                "src/anki_mcp/server.py"
+                "--frozen",
+                "-m",
+                "anki_mcp"
             ]
         }
     },
@@ -62,16 +64,36 @@
             "description": "Search notes with Anki search syntax"
         },
         {
-            "name": "add_notes",
-            "description": "Add notes, dry run by default"
+            "name": "create_draft_batch",
+            "description": "Create Draft Batch (with optional Anki Notes)"
+        },
+        {
+            "name": "add_to_draft",
+            "description": "Add Notes to existing Draft"
+        },
+        {
+            "name": "commit_draft",
+            "description": "Commit existing Draft to Anki"
         },
         {
             "name": "undo_batch",
             "description": "Delete a batch created by this server"
         },
         {
+            "name": "delete_notes",
+            "description": "Delete individual notes"
+        },
+        {
             "name": "update_note_fields",
             "description": "Change fields of one note"
+        },
+        {
+            "name": "extract_youtube_video_transcript",
+            "description": "Read Transcript from YouTube Video"
+        },
+        {
+            "name": "sync",
+            "description": "Sync with AnkiWeb, making results available on mobile"
         }
     ],
     "prompts_generated": true

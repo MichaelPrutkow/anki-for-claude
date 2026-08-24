@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime, timedelta
+from importlib.metadata import version
 from typing import Annotated, Any
 
 from mcp.server import MCPServer
@@ -21,18 +22,16 @@ from anki_mcp.youtube_api import (
     get_youtube_data,
 )
 
-mcp = MCPServer("anki")
+mcp = MCPServer("anki", version=version("anki-mcp-server"))
 
 
 @mcp.tool(title="List Decks", annotations=myConsts.READ_ONLY)
-def list_decks() -> dict[str, int]:
+def list_decks() -> list[str]:
     """
-    Gets the complete list of deck names and their IDs for the current user.
-
     Returns:
         List of all Decknames
     """
-    return invoke("deckNamesAndIds")
+    return invoke("deckNames")
 
 
 @mcp.tool(title="Create a new Deck", annotations=myConsts.ADDS_IF_MISSING)
@@ -48,7 +47,7 @@ def create_deck(
     return invoke("createDeck", deck=name)
 
 
-@mcp.tool(title="Model/Field Names", annotations=myConsts.READ_ONLY)
+@mcp.tool(title="Describe note type", annotations=myConsts.READ_ONLY)
 def describe_note_type(name: str | None = None) -> list[str]:
     """
     Gets the complete list of model names for the current user, if the name is None.
@@ -68,7 +67,7 @@ def describe_note_type(name: str | None = None) -> list[str]:
 @mcp.tool(title="Search for Notes", annotations=myConsts.READ_ONLY)
 def search_notes(
     query: Annotated[str, Field(description=myConsts.ANKI_SEARCH_RULES)],
-    limit: Annotated[int, Field(ge=1, le=100)] = 25,
+    limit: Annotated[int, Field(ge=1, le=100)] = 10,
     with_fields: bool = False,
 ) -> SearchResult:
     """
@@ -88,7 +87,16 @@ def search_notes(
 
     notes: list[dict[str, Any]] = []
     if with_fields and selected:
-        notes = invoke("notesInfo", notes=selected)
+        # notes = invoke("notesInfo", notes=selected)
+        for n in invoke("notesInfo", notes=selected):
+            notes.append(
+                {
+                    "id": n["noteId"],
+                    "type": n["modelName"],
+                    "tags": n["tags"],
+                    "fields": {k: v["value"][:300] for k, v in n["fields"].items()},
+                }
+            )
 
     return SearchResult(
         query=query, total_found=len(ids), note_ids=selected, notes=notes
@@ -98,7 +106,7 @@ def search_notes(
 active_drafts: dict[str, dict[str, Any]] = {}
 
 
-@mcp.tool(title="Create Draft Batch", annotations=myConsts.ADDS_NEW)
+@mcp.tool(title="Create Draft Batch", annotations=myConsts.DRAFT_ONLY)
 def create_draft_batch(
     deck: str,
     note_type: str,
@@ -152,7 +160,7 @@ def create_draft_batch(
     return draft_id
 
 
-@mcp.tool(title="Add Notes to Draft", annotations=myConsts.ADDS_NEW)
+@mcp.tool(title="Add Notes to Draft", annotations=myConsts.DRAFT_ONLY)
 def add_to_draft(
     draft_id: str,
     notes: Annotated[list[NoteInput], Field(min_length=1, max_length=50)],
@@ -202,6 +210,31 @@ def add_to_draft(
         for n in notes
     ]
 
+    first = valid[0]
+    dupes: list[int] = []
+    seen = [
+        {k.lower(): v for k, v in an["fields"].items()}.get(first.lower(), "")
+        .strip()
+        .lower()
+        for an in draft["notes"]
+    ]
+
+    for i, an in enumerate(test_anki_notes):
+        key = (
+            {k.lower(): v for k, v in an["fields"].items()}.get(first.lower(), "")
+            .strip()
+            .lower()
+        )
+        if key in seen:
+            dupes.append(i)
+        seen.append(key)
+
+    if dupes and not draft["allow_duplicate"]:
+        raise Exception(
+            f"Notes '{dupes}' are duplicates of other notes in this same draft. darft_ID: {draft_id}. "
+            f"\nAnky only compares the field '{first}. Nothing was added.'"
+        )
+
     status_and_details = invoke("canAddNotesWithErrorDetail", notes=test_anki_notes)
     errors: dict[str, list[int]] = {}
     for i, detail in enumerate(status_and_details):
@@ -233,8 +266,6 @@ def commit_draft(draft_id: str) -> AddResult:
 
     Every note gets tagged 'mcp::batch::<batch_id>'. The returned batch_id can be passed to 'undo_batch'
     to remove the entire batch again.
-
-    The draft is consumed and no longer exists afterwards.
     """
 
     if draft_id not in active_drafts:
@@ -242,24 +273,26 @@ def commit_draft(draft_id: str) -> AddResult:
             f"Draft '{draft_id}' does not exist. Call 'create_draft_batch' to create a new one."
         )
 
-    draft = active_drafts.pop(draft_id)
+    draft = active_drafts[draft_id]
     anki_notes = draft["notes"]
 
     if not anki_notes:
-        raise Exception(
-            f"Draft {draft_id} is empty / does not contain any notes. However this Draft was now deleted"
-        )
+        raise Exception(f"Draft {draft_id} is empty / does not contain any notes.")
 
     batch_id = uuid.uuid4().hex[:8]
     batch_tags = ["mcp::created", f"mcp::batch::{batch_id}"]
 
-    for an in anki_notes:
-        an["tags"] = [*an["tags"], *batch_tags]
+    payload = [{**an, "tags": [*an["tags"], *batch_tags]} for an in anki_notes]
+    result = invoke(
+        "multi", actions=[{"action": "addNote", "params": {"note": n}} for n in payload]
+    )
 
-    result: list[int | None] = invoke("addNotes", notes=anki_notes)
+    note_ids = [r for r in result if isinstance(r, int)]
+    failed_indices = [i for i, r in enumerate(result) if not isinstance(r, int)]
 
-    note_ids = [r for r in result if r is not None]
-    failed_indices = [i for i, r in enumerate(result) if r is None]
+    draft["notes"] = [anki_notes[i] for i in failed_indices]
+    if not draft["notes"]:
+        del active_drafts[draft_id]
 
     return AddResult(
         batch_id=batch_id,
@@ -319,7 +352,9 @@ def delete_notes(
 
 
 @mcp.tool(title="Update Fields of specific Note", annotations=myConsts.OVERWRITES)
-def update_note_fields(note_id: int, fields: dict[str, str]) -> dict[str, str]:
+def update_note_fields(
+    note_id: int, fields: dict[str, str], force: bool = False
+) -> dict[str, str]:
     """
     Modify the fields of an existing note.
     Returns old (pre-change) fields of the given Note.
@@ -328,10 +363,25 @@ def update_note_fields(note_id: int, fields: dict[str, str]) -> dict[str, str]:
     with same node_id, and return value of initial update.
     """
     info = invoke("notesInfo", notes=[note_id])
-    if not info:
+    if not info or not info[0]:
         raise Exception(f"No note with id {note_id}")
 
+    if "mcp::created" not in info[0].get("tags", []) and not force:
+        raise Exception(
+            f"Note {note_id} was not created by this server. Changing it overwrites the user's own work"
+            "\nIf unsure: Ask the user first, then call again with force=True"
+        )
+
     before = {k: v["value"] for k, v in info[0]["fields"].items()}
+
+    valid: list[str] = invoke("modelFieldNames", modelName=info[0]["modelName"])
+    valid_lower = {v.lower() for v in valid}
+    unknown = [k for k in fields if k.lower() not in valid_lower]
+    if unknown:
+        raise Exception(
+            f"Unknown fields '{unknown}'. \nThe only valid fiels are: {valid}"
+        )
+
     invoke("updateNoteFields", note={"id": note_id, "fields": fields})
     return before
 
@@ -367,42 +417,43 @@ def extract_youtube_video_transcript(
     of course the video is too long - in which case you will receive an Outline and should call again.
     """
 
-    if (url, targetlanguage) in active_videos:
-        vid = active_videos[url, targetlanguage]
-    else:
-        cached_lang = next(
-            lang for cached_url, lang in active_videos if cached_url == url
-        )
-
-        if cached_lang:
-            raise Exception(
-                f"The requested URL is already in the local cache, but with a different language: {cached_lang}"
-                "\n"
-                f"Please call the tool again using targetlanguage='{cached_lang}' to use the cached version"
-            )
-
-        vid: YouTubeVideoData = get_youtube_data(url, targetlanguage)
+    vid = active_videos.get((url, targetlanguage))
+    if vid is None:
+        vid = get_youtube_data(url, targetlanguage)
+        if len(active_videos) >= 8:
+            active_videos.pop(next(iter(active_videos)))
         active_videos[url, targetlanguage] = vid
 
     if intervals:
         return extract_Segments(vid, intervals)
 
-    if vid.total_length_seconds > 900:
-        msg = "The Video is too long! Analyse the Outline and call 'extract_youtube_video_transcript' again, but INCLUDING time intervals"
-        return f"{msg}. \nOutline:\n{extract_outline(vid)}"
+    full = extract_full_transcript(vid)
 
-    return extract_full_transcript(vid)
+    if len(full) > 8000:
+        return (
+            "The transcript is too long. Pick the relevant parts from the outline and call"
+            f"this tool again INCLUDING 'intervals'. \nOutline:\n{extract_outline(vid)}"
+        )
+
+    return full
+
+
+@mcp.tool(title="Sync with AnkiWeb", annotations=myConsts.READ_ONLY)
+def sync() -> str:
+    """Pusheds the collection to AnkiWeb so the new cards reach he users's phone."""
+    invoke("sync")
+    return "Sync started"
 
 
 @mcp.prompt(title="Create Cards from Context")
-def make_cards(source: str, deck: str, tags: str = "") -> str:
+def make_cards(deck: str, tags: str = "", source: str = "") -> str:
     """Turn lecture material (or other context) into Anki cards following
     the card-design rules."""
 
     return (
         f"{myConsts.CARD_RULES}\n\n"
         f"<target>\ndeck: {deck} \ntags: {tags or '(none)'}\n</target>\n\n"
-        f"<source>\n{source}\n</source>"
+        f"<source>\n{source or 'Use the material already in this conversation (attached files, project knowledge, previous messages).'}\n</source>"
     )
 
 

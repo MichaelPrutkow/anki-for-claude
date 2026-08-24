@@ -7,6 +7,13 @@ READ_ONLY = ToolAnnotations(
     open_world_hint=False,
 )
 
+DRAFT_ONLY = ToolAnnotations(
+    read_only_hint=True,
+    destructive_hint=False,
+    idempotent_hint=False,
+    open_world_hint=False,
+)
+
 # creates new, calling twice does not overwrites, but creates multiples
 ADDS_NEW = ToolAnnotations(
     read_only_hint=False,
@@ -190,7 +197,7 @@ Note type choice
 - Cloze for anything embedded in a sentence, for enumerations broken into gaps, and for
   formulas where one part is the target.
 - Basic for a genuine question with a separate answer.
-- add_notes takes one note type per call. If you need both, make two calls.
+- create_draft_batch takes one note type per call. If you need both, make two calls.
 </format>
  
 <examples>
@@ -255,7 +262,7 @@ WHY   Even a single symbol with a subscript needs \(...\). There is no threshold
 </examples>
  
 <self_check>
-Before calling add_notes, go through every card and act on each point:
+Before calling create_draft_batch, go through every card and act on each point:
  
 - Does the answer contain an "and", a comma-separated list, or more than one fact? Split it.
 - Could a reasonable person give a different correct answer? Add the missing context.

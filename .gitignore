@@ -16,3 +16,5 @@ wheels/
 bundle/
 
 .DS_Store
+
+*.mcpb
