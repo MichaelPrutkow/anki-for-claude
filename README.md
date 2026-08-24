@@ -153,28 +153,28 @@ five that change anything.
 
 ```mermaid
 flowchart TD
-    U["You<br>Make cards from this lecture, deck:  'XYZ'"]
+    U["<b>You</b><br><i>Make cards from this lecture</i>"]
 
-    subgraph SAFE["&nbsp;Nothing touches your collection yet&nbsp;"]
+    subgraph SAFE["&nbsp; Nothing touches your collection yet &nbsp;"]
         direction LR
-        R["get_card_rules<br>the card design rules"]
-        N["describe_note_type<br>exact field names"]
-        D["create_draft_batch<br>validates deck, fields, duplicates"]
-        P["Cards appear in the chat<br>every field, as it will look"]
+        R["<b>get_card_rules</b><br>the card design rules"]
+        N["<b>describe_note_type</b><br>exact field names"]
+        D["<b>create_draft_batch</b><br>validates deck, fields, duplicates"]
+        P["<b>Cards appear in the chat</b><br>every field, as it will look"]
         R --> N --> D --> P
     end
 
-    Q{"You approve?"}
+    Q{"<b>You approve?</b>"}
 
-    subgraph LIVE["&nbsp;Written to your collection&nbsp;"]
+    subgraph LIVE["&nbsp; Written to your collection &nbsp;"]
         direction LR
-        C["commit_draft<br>the only tool that writes"]
-        A["11 cards in Anki<br>tagged mcp::batch::4f2a91c3"]
-        Y["sync<br>on your phone"]
+        C["<b>commit_draft</b><br><i>the only tool that writes</i>"]
+        A["<b>Cards are in Anki</b><br>tagged mcp::batch::&lt;id&gt;"]
+        Y["<b>sync</b><br>on your phone"]
         C --> A --> Y
     end
 
-    Z["undo_batch 4f2a91c3<br>removes all 11 again"]
+    Z["<b>undo_batch</b><br><i>removes the whole batch again</i>"]
 
     U --> R
     P --> Q
@@ -183,7 +183,7 @@ flowchart TD
     A -.->|"Changed your mind"| Z
 
     classDef you fill:#0969da,stroke:#0550ae,color:#ffffff
-    classDef step fill:#f6f8fa,stroke:#8c959f,color:#1f2328
+    classDef step fill:#ffffff,stroke:#8c959f,color:#1f2328
     classDef gate fill:#bf8700,stroke:#9a6700,color:#ffffff
     classDef write fill:#1a7f37,stroke:#116329,color:#ffffff
     classDef undo fill:#cf222e,stroke:#a40e26,color:#ffffff
@@ -194,8 +194,8 @@ flowchart TD
     class C,A,Y write
     class Z undo
 
-    style SAFE fill:none,stroke:#8c959f,stroke-width:2px,stroke-dasharray:6 4
-    style LIVE fill:none,stroke:#1a7f37,stroke-width:2px
+    style SAFE fill:#eaeef2,stroke:#8c959f,stroke-width:2px,stroke-dasharray:6 4,color:#1f2328
+    style LIVE fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#1f2328
 ```
 
 Everything above the gate is free. Claude can draft, validate, throw cards away and draft again
