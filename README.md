@@ -152,41 +152,38 @@ five that change anything.
 ## How it works
 
 ```mermaid
+%%{init: {"flowchart": {"subGraphTitleMargin": {"top": 6, "bottom": 20}, "rankSpacing": 50}}}%%
 flowchart TD
-    U["<b>You</b><br><i>Make cards from this lecture</i>"]
-
-    subgraph SAFE["&nbsp; Nothing touches your collection yet &nbsp;"]
-        direction LR
+    subgraph SAFE["<b>Nothing touches your collection yet</b>"]
+        U["<b>You</b><br><i>Make cards from this lecture</i>"]
         R["<b>get_card_rules</b><br>the card design rules"]
         N["<b>describe_note_type</b><br>exact field names"]
         D["<b>create_draft_batch</b><br>validates deck, fields, duplicates"]
         P["<b>Cards appear in the chat</b><br>every field, as it will look"]
-        R --> N --> D --> P
+        U --> R --> N --> D --> P
     end
 
     Q{"<b>You approve?</b>"}
 
-    subgraph LIVE["&nbsp; Written to your collection &nbsp;"]
-        direction LR
+    subgraph LIVE["<b>Written to your collection</b>"]
         C["<b>commit_draft</b><br><i>the only tool that writes</i>"]
-        A["<b>Cards are in Anki</b><br>tagged mcp::batch::&lt;id&gt;"]
+        A["<b>Cards are in Anki</b><br>tagged mcp::batch::ID"]
         Y["<b>sync</b><br>on your phone"]
         C --> A --> Y
     end
 
-    Z["<b>undo_batch</b><br><i>removes the whole batch again</i>"]
+    Z["<b>undo_batch</b><br><i>removes the whole batch</i>"]
 
-    U --> R
     P --> Q
     Q -->|"Needs changes"| D
     Q -->|"Go"| C
     A -.->|"Changed your mind"| Z
 
-    classDef you fill:#0969da,stroke:#0550ae,color:#ffffff
-    classDef step fill:#ffffff,stroke:#8c959f,color:#1f2328
-    classDef gate fill:#bf8700,stroke:#9a6700,color:#ffffff
-    classDef write fill:#1a7f37,stroke:#116329,color:#ffffff
-    classDef undo fill:#cf222e,stroke:#a40e26,color:#ffffff
+    classDef you fill:#0969da,stroke:#0a3069,stroke-width:2px,color:#ffffff
+    classDef step fill:#ffffff,stroke:#57606a,stroke-width:2px,color:#1f2328
+    classDef gate fill:#bf8700,stroke:#7d4e00,stroke-width:3px,color:#ffffff
+    classDef write fill:#1a7f37,stroke:#0f4c22,stroke-width:2px,color:#ffffff
+    classDef undo fill:#cf222e,stroke:#82071e,stroke-width:2px,color:#ffffff
 
     class U you
     class R,N,D,P step
@@ -194,8 +191,10 @@ flowchart TD
     class C,A,Y write
     class Z undo
 
-    style SAFE fill:#eaeef2,stroke:#8c959f,stroke-width:2px,stroke-dasharray:6 4,color:#1f2328
-    style LIVE fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#1f2328
+    style SAFE fill:#f6f8fa,stroke:#57606a,stroke-width:2px,stroke-dasharray:7 5,color:#1f2328
+    style LIVE fill:#e6ffec,stroke:#1a7f37,stroke-width:2px,color:#0f4c22
+
+    linkStyle default stroke:#57606a,stroke-width:3px
 ```
 
 ## Safety
