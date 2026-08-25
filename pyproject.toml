@@ -1,6 +1,6 @@
 [project]
 name = "anki-mcp-server"
-version = "0.1.2"
+version = "1.0.0"
 description = "MCP server for creating and maintaining Anki flashcards from LLMs"
 readme = "README.md"
 license = "MIT"

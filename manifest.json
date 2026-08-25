@@ -3,7 +3,7 @@
     "name": "anki-mcp-server",
     "display_name": "Anki",
     "icon": "icon.png",
-    "version": "0.1.2",
+    "version": "1.0.0",
     "description": "Create and maintain Anki flashcards from Claude",
     "long_description": "Generates flashcards from lecture material, searches the collection, and undoes entire batches. Requires Anki with the AnkiConnect add-on.",
     "author": {
