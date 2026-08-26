@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/MCP-2.0-violet" alt="MCP 2.0">
 </p>
 
-An MCP server that lets Claude read your lecture material and write Anki flashcards from it.
+An MCP server that lets Claude read your lecture material, transcribe YouTube Videos and write Anki flashcards from it.
 It talks to your running Anki through [AnkiConnect](https://ankiweb.net/shared/info/2055492159).
 
 Most LLM-to-Anki tools do one thing: take text, produce cards, write them. That produces a lot
@@ -24,11 +24,11 @@ cards that are actually worth reviewing, grounded in your own material.
 
 ## Demo
 
-**Asking Claude for cards from a lecture**
+**Asking Claude for cards from a YouTube video combined with lecture slides**
 
 https://github.com/user-attachments/assets/68d1f24f-7f6c-480d-aa16-c312484f873b
 
-**What came out, clicked through in Anki**
+**Output, clicked through in Anki**
 
 https://github.com/user-attachments/assets/00ac5217-9e81-4b8c-8479-c9aa38729dc4
 
@@ -83,10 +83,13 @@ your collection, and the card rules forbid calling it in the same turn as the dr
 > Both are lost when the server is killed. Commit your drafts in one sitting and do not close
 > Claude Desktop in the process.
 
-<!-- TODO: Gif Draft-Review -->
-<p align="center">
-  <img src="docs/media/draft-review.gif" alt="Reviewing a draft before committing" width="720">
-</p>
+
+<details>
+  <summary><h3> Click to view: Example of the generated Anki Math cards</h3></summary>
+  <br>
+  <img width="700" alt="image" src="https://github.com/user-attachments/assets/d1c2b2d4-5ec1-4048-b8a8-94ab4bd81a61" />
+</details>
+
 
 ### Every batch can be removed again
 
@@ -108,10 +111,12 @@ and specific:
 - Rules on phrasing, so the wording stays human instead of clanker-like, inspired by
   [Wikipedia: Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing).
 
-<!-- TODO: Screenshot Karte -->
-<p align="center">
-  <img src="docs/media/card-example.png" alt="A rendered card with MathJax" width="560">
-</p>
+<details>
+  <summary><h3>Click to view: Example of the generated Anki cards</h3></summary>
+  <br>
+  <img width="700" alt="image" src="https://github.com/user-attachments/assets/d1c2b2d4-5ec1-4048-b8a8-94ab4bd81a61" />
+</details>
+
 
 ### One bad card does not kill the batch
 
@@ -247,7 +252,7 @@ The script refuses to build if `pyproject.toml` and `manifest.json` disagree on 
 if the bundled sources drift from `src/`.
 
 ## Personal AI Use
-I wrote almost all of this code myself because I wanted to use this project to learn. I did use some AI assistance, but strictly for formulating my ideas for the long system prompt and this README, as well as for minor bug fixes and some helper functions.
+I wrote almost all of this code myself because I wanted to use this project to learn. I did use some AI assistance, but strictly for formulating my ideas for the long system prompt and this README, as well as for minor bug fixes and some helper and utility functions.
 
 
 ## Credits
