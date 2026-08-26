@@ -15,19 +15,23 @@
   <img src="https://img.shields.io/badge/MCP-2.0-violet" alt="MCP 2.0">
 </p>
 
-<!-- TODO: Gif Hero -->
-<p align="center">
-  <img src="docs/media/hero.gif" alt="Creating flashcards from a lecture PDF" width="720">
-</p>
-
----
-
 An MCP server that lets Claude read your lecture material and write Anki flashcards from it.
 It talks to your running Anki through [AnkiConnect](https://ankiweb.net/shared/info/2055492159).
 
 Most LLM-to-Anki tools do one thing: take text, produce cards, write them. That produces a lot
 of cards and not much learning. Anki MCP connects Claude directly to Anki and has it generate
 cards that are actually worth reviewing, grounded in your own material.
+
+## Demo
+
+**Asking Claude for cards from a lecture**
+
+https://github.com/user-attachments/assets/68d1f24f-7f6c-480d-aa16-c312484f873b
+
+**What came out, clicked through in Anki**
+
+https://github.com/user-attachments/assets/00ac5217-9e81-4b8c-8479-c9aa38729dc4
+
 
 ## Requirements
 
