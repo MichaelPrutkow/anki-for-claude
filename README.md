@@ -128,10 +128,6 @@ other 49 still land, and the failed one stays in the draft with the reason attac
 full transcript. Claude picks the intervals that matter and asks for those, which makes long
 videos far cheaper than pulling the whole transcript into the chat.
 
-<!-- TODO: Gif YouTube -->
-<p align="center">
-  <img src="docs/media/youtube.gif" alt="Turning a lecture video into cards" width="720">
-</p>
 
 ## Tools
 
