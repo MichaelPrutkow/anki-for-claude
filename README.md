@@ -85,11 +85,10 @@ your collection, and the card rules forbid calling it in the same turn as the dr
 
 
 <details>
-  <summary><h3> Click to view: Example of the generated Anki Math cards</h3></summary>
+  <summary><h3> Click to view: Example of an in-chat draft</h3></summary>
   <br>
-  <img width="700" alt="image" src="https://github.com/user-attachments/assets/d1c2b2d4-5ec1-4048-b8a8-94ab4bd81a61" />
+  <img width="513" alt="image" src="https://github.com/user-attachments/assets/65a415b6-f8fd-4c58-8db5-ceb7c0adc09a" />
 </details>
-
 
 ### Every batch can be removed again
 
