@@ -5,7 +5,7 @@
 <h1 align="center">Anki MCP</h1>
 
 <p align="center">
-  <b>Turn lecture material, YouTube videos or any other context from your chat into Anki cards worth keeping.</b>
+  <b>Turn lecture material, YouTube videos or any other context from your chat into Anki cards.</b>
 </p>
 
 <p align="center">
