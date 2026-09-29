@@ -459,17 +459,7 @@ def get_card_rules() -> str:
     return myConsts.CARD_RULES
 
 
-@mcp.prompt(title="Create Cards from Context")
-def make_cards(deck: str, tags: str = "", source: str = "") -> str:
-    """Turn lecture material (or other context) into Anki cards following
-    the card-design rules."""
-
-    return (
-        f"{myConsts.CARD_RULES}\n\n"
-        f"<target>\ndeck: {deck} \ntags: {tags or '(none)'}\n</target>\n\n"
-        f"<source>\n{source or 'Use the material already in this conversation (attached files, project knowledge, previous messages).'}\n</source>"
-    )
-
+# NOTE: Deleted Prompt - not used nor useful
 
 if __name__ == "__main__":
     mcp.run()
