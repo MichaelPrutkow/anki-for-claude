@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/github/downloads/MichaelPrutkow/anki-mcp-server/total" alt="Downloads">
+  <img src="https://img.shields.io/github/downloads/MichaelPrutkow/anki-mcp-server/total?color=purple" alt="Downloads">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT"></a>
   <img src="https://img.shields.io/badge/Anki-23.10%2B-orange" alt="Anki 23.10+">
   <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB" alt="Python 3.10+">
