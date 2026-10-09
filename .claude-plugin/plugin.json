@@ -9,5 +9,16 @@
   "userConfig": {
     "anki_connect_url": { "type": "string", "title": "AnkiConnect URL", "description": "Where AnkiConnect listens", "default": "http://127.0.0.1:8765" },
     "auto_launch_anki": { "type": "boolean", "title": "Start Anki automatically", "description": "Launch Anki when it is not running", "default": true }
+  },
+  "mcpServers": {
+    "anki": {
+      "command": "uv",
+      "args": ["run", "--directory", "${CLAUDE_PLUGIN_ROOT}", "--frozen", "--quiet", "-m", "anki_mcp"],
+      "env": {
+        "UV_PROJECT_ENVIRONMENT": "${CLAUDE_PLUGIN_DATA}/venv",
+        "ANKI_CONNECT_URL": "${user_config.anki_connect_url}",
+        "ANKI_AUTO_LAUNCH": "${user_config.auto_launch_anki}"
+      }
+    }
   }
 }
