@@ -12,7 +12,7 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.pyplot as plt
 
 PALETTE = [
     "#0072B2",
@@ -27,7 +27,7 @@ plt.rcParams.update(
     {
         "figure.facecolor": "white",
         "axes.facecolor": "white",
-        "axes.prop_cycle": plt.cycler(color=PALETTE),
+        "axes.prop_cycle": plt.cycler(color=PALETTE), # type: ignore
         "axes.spines.top": False,
         "axes.spines.right": False,
         "axes.grid": True,

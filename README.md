@@ -63,16 +63,14 @@ The first start takes a few seconds while uv installs the dependencies. Ask Clau
 
 ### Settings
 
-| Option | Default | |
-| --- | --- | --- |
-| AnkiConnect URL | `http://127.0.0.1:8765` | Only change this if you moved AnkiConnect |
-| Start Anki automatically | on | Opens Anki when it is not running (macOS) |
-| Materials folder | empty | Folder with your lecture PDFs and images. File names are looked up here, so you can say *"figure 3 in vorlesung5.pdf"*. |
+None needed. The plugin talks to AnkiConnect on `http://127.0.0.1:8765` and starts Anki when it
+is not running (macOS). Give Claude absolute paths for PDFs and images, or work in a project
+folder: relative file names are looked up there.
 
 ### Upgrading from 1.x
 
-Remove the old Anki extension (`.mcpb`) from Claude Desktop, otherwise Claude sees two sets of
-Anki tools. Cards created with 1.x keep working: they are still tagged `mcp::created`, and their
+Remove the old Anki extension (`.mcpb`) under ***Settings → Extensions*** in Claude Desktop,
+otherwise Claude sees two sets of Anki tools. Cards created with 1.x keep working: they are still tagged `mcp::created`, and their
 batches can still be undone.
 
 ### Any other MCP client, from source

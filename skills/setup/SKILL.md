@@ -7,6 +7,10 @@ description: Checks and fixes the anki plugin's setup - Anki and AnkiConnect rea
 
 Run the checks in order and report a short checklist (ok / problem + exact fix).
 
+0. **Tools present**: if `overview` and the other anki tools do not exist at all, the plugin's server did not start.
+   Anki being open does not matter for this. Fixes, most likely first: install uv (`brew install uv`, or
+   `curl -LsSf https://astral.sh/uv/install.sh | sh`) and restart Claude; update the plugin to the newest version;
+   remove an old Anki `.mcpb` extension from Claude Desktop; then start a new chat. Stop here until the tools exist.
 1. **Anki and AnkiConnect**: call `overview`.
    - Fails with "doesn't respond": Anki is closed or AnkiConnect is missing. Fix: open Anki; install AnkiConnect via Tools > Add-ons > Get Add-ons, code `2055492159`, then restart Anki.
    - Fails with a timeout: a dialog is open in Anki (often the profile chooser or a sync conflict). Fix: close it; set a default profile.
