@@ -1,6 +1,12 @@
 {
   "name": "michaelprutkow",
-  "owner": { "name": "Michael Prutkow" },
-  "plugins": [{ "name": "anki", "source": "./", "description": "Anki flashcards for Claude" }],
-  "description": "Claude plugins by Michael Prutkow"
+  "description": "Claude plugins by Michael Prutkow",
+  "owner": { "name": "Michael Prutkow", "url": "https://github.com/MichaelPrutkow" },
+  "plugins": [
+    {
+      "name": "anki",
+      "source": "./",
+      "description": "Anki flashcards for Claude: card rules, visual preview, images, image occlusion and weak-card statistics"
+    }
+  ]
 }

@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review cards</title>
+<style>
+  * { box-sizing: border-box; }
+  body { max-width: 860px; margin: 40px auto; padding: 0 16px; background: #fff; color: #000; font: 18px/1.5 serif; }
+  button, input { font: inherit; color: #000; background: #fff; border: 1px solid #000; }
+  button { min-width: 44px; padding: 4px 12px; cursor: pointer; }
+  button.on { background: #000; color: #fff; }
+  button:disabled { visibility: hidden; }
+  nav { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  nav button { border: 0; padding: 0 6px; min-width: 0; font-size: 22px; line-height: 1; }
+  nav span { margin-right: auto; }
+  .card { border: 1px solid #000; margin-bottom: 16px; }
+  .sides { display: grid; grid-template-columns: 1fr 1fr; }
+  .sides + .sides { border-top: 1px solid #000; }
+  .sides > div + div { border-left: 1px solid #000; }
+  iframe { display: block; width: 100%; height: 60px; border: 0; }
+  .row { display: flex; gap: 8px; }
+  input { flex: 1; min-width: 0; padding: 4px 10px; }
+  input::placeholder { color: #888; }
+  .commit { display: block; margin: 32px 0 0 auto; }
+  @media (max-width: 640px) {
+    .sides { grid-template-columns: 1fr; }
+    .sides > div + div { border-left: 0; border-top: 1px solid #000; }
+  }
+</style>
+</head>
+<body>
+<main id="main"><p>Loading…</p></main>
+<script>
+const TOKEN = "__TOKEN__", DRAFT = "__DRAFT__";
+const HEAD = '<script>window.MathJax={tex:{inlineMath:[["\\\\(","\\\\)"]],displayMath:[["\\\\[","\\\\]"]]},svg:{fontCache:"local"}};<\/script>'
+  + '<script async src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"><\/script>';
+const RESIZE = '<script>const post=()=>parent.postMessage({frame:ID,h:Math.ceil(document.documentElement.getBoundingClientRect().height)},"*");'
+  + 'new ResizeObserver(post).observe(document.body);addEventListener("load",post);<\/script>';
+
+let cards = [], i = 0;
+const frames = [];
+const main = document.getElementById("main");
+
+function el(tag, props = {}, ...children) {
+  const e = Object.assign(document.createElement(tag), props);
+  e.append(...children);
+  return e;
+}
+
+// Card HTML runs sandboxed with the note type's own CSS, like in Anki.
+function frame(html, css) {
+  const f = el("iframe", { sandbox: "allow-scripts" });
+  f.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><style>${css}
+    html,body{margin:0;overflow:hidden;} body{padding:20px 16px;} img{max-width:100%;max-height:320px;height:auto;}</style>${HEAD}</head>
+    <body class="card">${html}${RESIZE.replace("ID", frames.length)}</body></html>`;
+  frames.push(f);
+  return f;
+}
+
+function show() {
+  const c = cards[i];
+  frames.length = 0;
+
+  const card = el("div", { className: "card" },
+    ...c.sides.map((s) => el("div", { className: "sides" }, el("div", {}, frame(s.front, c.css)), el("div", {}, frame(s.back, c.css)))));
+
+  const accept = el("button", { textContent: "✓", title: "Accept", className: c.review === "accepted" ? "on" : "" });
+  const reject = el("button", { textContent: "✕", title: "Reject", className: c.review === "rejected" ? "on" : "" });
+  const note = el("input", { placeholder: "Note for Claude: what should change?", value: c.comment });
+  accept.onclick = () => decide("accepted");
+  reject.onclick = () => decide("rejected");
+  note.oninput = () => {
+    c.comment = note.value;
+    if (c.comment.trim()) c.review = "open";
+    accept.className = reject.className = "";
+  };
+  note.onkeydown = (e) => { if (e.key === "Enter") go(i + 1); };
+
+  main.replaceChildren(
+    el("nav", {},
+      el("span", {}, `${i + 1} / ${cards.length}`),
+      el("button", { textContent: "‹", title: "Previous", disabled: i === 0, onclick: () => go(i - 1) }),
+      el("button", { textContent: "›", title: "Next", disabled: i === cards.length - 1, onclick: () => go(i + 1) })),
+    card,
+    el("div", { className: "row" }, accept, reject, note),
+    el("button", { className: "commit", textContent: "Commit", onclick: commit }));
+}
+
+function decide(review) {
+  const c = cards[i];
+  c.review = c.review === review ? "open" : review;
+  if (c.review !== "open") c.comment = "";
+  if (c.review !== "open" && i < cards.length - 1) go(i + 1); else show();
+}
+
+function go(j) {
+  i = Math.max(0, Math.min(j, cards.length - 1));
+  show();
+  scrollTo({ top: 0 });
+}
+
+async function commit() {
+  const decisions = cards.map((c) => ({ n: c.n, review: c.review, comment: c.comment }));
+  const r = await fetch(`/api/d/${DRAFT}/done`, {
+    method: "POST",
+    headers: { "X-Token": TOKEN, "Content-Type": "application/json" },
+    body: JSON.stringify({ decisions }),
+  });
+  main.replaceChildren(el("p", {}, r.ok ? "Done. You can close this tab." : "That did not work. Is Claude still running?"));
+}
+
+addEventListener("message", (e) => {
+  const f = frames[e.data && e.data.frame];
+  if (f) f.style.height = Math.max(40, e.data.h) + "px";
+});
+
+addEventListener("keydown", (e) => {
+  if (e.target.tagName === "INPUT" || !cards.length) return;
+  if (e.key === "ArrowRight") go(i + 1);
+  if (e.key === "ArrowLeft") go(i - 1);
+});
+
+fetch(`/api/d/${DRAFT}`, { headers: { "X-Token": TOKEN } })
+  .then((r) => r.json())
+  .then((d) => {
+    cards = d.cards;
+    if (cards.length) show();
+    else main.replaceChildren(el("p", {}, "This draft has no cards."));
+  })
+  .catch(() => main.replaceChildren(el("p", {}, "Draft not found.")));
+</script>
+</body>
+</html>

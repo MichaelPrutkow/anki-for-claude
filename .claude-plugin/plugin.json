@@ -2,24 +2,26 @@
   "name": "anki",
   "displayName": "Anki Flashcards",
   "version": "2.0.0",
-  "description": "Create, review and improve Anki flashcards with Claude. Unofficial, not affiliated with Ankitects.",
+  "description": "Create, review and improve Anki flashcards with Claude: card rules, a visual preview, images and image occlusion, weak-card statistics. Unofficial, not affiliated with Ankitects.",
   "author": { "name": "Michael Prutkow", "url": "https://github.com/MichaelPrutkow" },
   "license": "MIT",
-  "keywords": ["anki", "flashcards", "spaced-repetition"],
-  "homepage": "https://github.com/MichaelPrutkow/anki-mcp-server",
-  "repository": "https://github.com/MichaelPrutkow/anki-mcp-server",
+  "keywords": ["anki", "flashcards", "spaced-repetition", "image-occlusion", "study"],
+  "homepage": "https://github.com/MichaelPrutkow/anki-for-claude",
+  "repository": "https://github.com/MichaelPrutkow/anki-for-claude",
   "userConfig": {
     "anki_connect_url": { "type": "string", "title": "AnkiConnect URL", "description": "Where AnkiConnect listens", "default": "http://127.0.0.1:8765" },
-    "auto_launch_anki": { "type": "boolean", "title": "Start Anki automatically", "description": "Launch Anki when it is not running", "default": true }
+    "auto_launch_anki": { "type": "boolean", "title": "Start Anki automatically", "description": "Launch Anki when it is not running (macOS)", "default": true },
+    "workspace_dir": { "type": "string", "title": "Materials folder", "description": "Folder with lecture PDFs and images; relative file names are looked up here", "default": "" }
   },
   "mcpServers": {
     "anki": {
       "command": "uv",
-      "args": ["run", "--directory", "${CLAUDE_PLUGIN_ROOT}", "--frozen", "--quiet", "-m", "anki_mcp"],
+      "args": ["run", "--directory", "${CLAUDE_PLUGIN_ROOT}", "--frozen", "--no-dev", "--quiet", "-m", "anki_mcp"],
       "env": {
         "UV_PROJECT_ENVIRONMENT": "${CLAUDE_PLUGIN_DATA}/venv",
         "ANKI_CONNECT_URL": "${user_config.anki_connect_url}",
-        "ANKI_AUTO_LAUNCH": "${user_config.auto_launch_anki}"
+        "ANKI_AUTO_LAUNCH": "${user_config.auto_launch_anki}",
+        "ANKI_WORKSPACE": "${user_config.workspace_dir}"
       }
     }
   }
