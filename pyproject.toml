@@ -1,5 +1,5 @@
 [project]
-name = "anki-mcp-server"
+name = "anki-for-claude"
 version = "2.0.0"
 description = "Claude plugin and MCP server for creating and maintaining Anki flashcards"
 readme = "README.md"
@@ -22,8 +22,8 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/MichaelPrutkow/anki-mcp-server"
-Issues = "https://github.com/MichaelPrutkow/anki-mcp-server/issues"
+Homepage = "https://github.com/MichaelPrutkow/anki-for-claude"
+Issues = "https://github.com/MichaelPrutkow/anki-for-claude/issues"
 
 [project.scripts]
 anki-mcp = "anki_mcp:main"

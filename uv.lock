@@ -9,7 +9,7 @@ resolution-markers = [
 ]
 
 [[package]]
-name = "anki-mcp-server"
+name = "anki-for-claude"
 version = "2.0.0"
 source = { editable = "." }
 dependencies = [
