@@ -1,0 +1,6 @@
+{
+  "name": "michaelprutkow",
+  "owner": { "name": "Michael Prutkow" },
+  "plugins": [{ "name": "anki", "source": "./", "description": "Anki flashcards for Claude" }],
+  "description": "Claude plugins by Michael Prutkow"
+}

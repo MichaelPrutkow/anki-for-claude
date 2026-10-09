@@ -1,0 +1,13 @@
+{
+  "name": "anki",
+  "displayName": "Anki Flashcards",
+  "version": "2.0.0",
+  "description": "Create, review and improve Anki flashcards with Claude. Unofficial, not affiliated with Ankitects.",
+  "author": { "name": "Michael Prutkow", "url": "https://github.com/MichaelPrutkow" },
+  "license": "MIT",
+  "keywords": ["anki", "flashcards", "spaced-repetition"],
+  "userConfig": {
+    "anki_connect_url": { "type": "string", "title": "AnkiConnect URL", "description": "Where AnkiConnect listens", "default": "http://127.0.0.1:8765" },
+    "auto_launch_anki": { "type": "boolean", "title": "Start Anki automatically", "description": "Launch Anki when it is not running", "default": true }
+  }
+}

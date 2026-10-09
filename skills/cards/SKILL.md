@@ -1,89 +1,9 @@
-from mcp.types import ToolAnnotations
-
-READ_ONLY = ToolAnnotations(
-    read_only_hint=True,
-    destructive_hint=False,
-    idempotent_hint=True,
-    open_world_hint=False,
-)
-
-DRAFT_ONLY = ToolAnnotations(
-    read_only_hint=True,
-    destructive_hint=False,
-    idempotent_hint=False,
-    open_world_hint=False,
-)
-
-# creates new, calling twice does not overwrites, but creates multiples
-ADDS_NEW = ToolAnnotations(
-    read_only_hint=False,
-    destructive_hint=False,
-    idempotent_hint=False,
-    open_world_hint=False,
-)
-
-# creates only if missing, second call changes nothing
-ADDS_IF_MISSING = ToolAnnotations(
-    read_only_hint=False,
-    destructive_hint=False,
-    idempotent_hint=True,
-    open_world_hint=False,
-)
-
-# Overwrites or deletes existing, calling multiple times doesn't affect state
-OVERWRITES = ToolAnnotations(
-    read_only_hint=False,
-    destructive_hint=True,
-    idempotent_hint=True,
-    open_world_hint=False,
-)
+---
+name: cards
+description: Writes high-quality Anki flashcards from any study material (lecture notes, slides, PDFs, papers, past exams, YouTube transcripts) and adds them to the user's Anki collection with the anki MCP tools. Use whenever the user wants flashcards, Anki cards, cloze cards or a deck, or wants to turn material into spaced-repetition cards, in any language (Karteikarten, Lernkarten). Contains the card design rules, LaTeX and cloze formatting, and the draft, review, commit workflow.
+---
 
 
-INSTRUCTIONS = """\
-This server writes to the user's real Anki collection.
-
-When the user asks for flashcards, Anki cards, or a deck from any material:
-1. Call 'get_card_rules' FIRST. Do not write cards from memory. The rules are long,
-   specific and non-obvious, and cards written without them look fine but fail in review.
-2. Never call 'commit_draft' without showing the drafted cards and getting approval.
-
-For anything else (searching, listing, fixing one card) use the tools directly.
-"""
-
-
-ANKI_SEARCH_RULES = r""" MUST follow Anki's strict search syntax:
-1. BASIC LOGIC:
-- Space = AND (e.g., 'dog cat' -> contains both)
-- 'or' = OR (e.g., 'dog or cat')
-- '-' = NOT (e.g., '-cat' -> without cat)
-- '(...)' = Grouping (e.g., 'dog (cat or mouse)')
-- '"..."' = Exact phrase/spaces (e.g., '"a dog"')
-- '*' = Wildcard (e.g., 'd*g' -> dog, dug, dg...)
-
-2. FIELDS & METADATA:
-- 'deck:Name' or 'deck:Name::Subdeck' (e.g, 'deck:"French Words"')
-- 'tag:Name' (e.g, 'tag:animal', 'tag:none' for no tags)
-- 'note:Name' (Filter by Note Type, e.g., 'note:Basic')
-- 'FieldName:Text' (e.g., 'Front:dog') CRITICAL: Field searches require EXACT matches! Use wildcards for partial matches (e.g., `Front:*dog*`).
-- `FieldName:` (Empty field) / `FieldName:_*` (Non-empty field)
-            
-3. CARD STATES:
-- `is:new` (New cards)
-- `is:due` (Waiting to be studied)
-- `is:learn` (In learning)
-- `is:review` (Reviews/lapsed)
-- `is:suspended` (Suspended cards)
-
-4. General
-- 'prop:lapses>3', 'prop:ivl>=21' (numeric comparisons)
-- 'added:7', 'edited:7' (within the last N days)
-- '\' escapes a literal '*', '_', '"' or ':'
-- Tags are hierarchical: 'tag:mcp::batch::*' matches all subtags
-"""
-
-
-# For the sake of transparency: AI (Claude Opus 5) helped draft this prompt.
-CARD_RULES = r"""
 <role>
 You are the most advanced Anki flashcard creater in the entire world! You specilize in mathematics(linear algebra, analysis, discrete math, statistics) and 
 theoretical computer science, usually in German and/or English. However you can handle any language and any topic flawlessly.
@@ -95,19 +15,17 @@ than you are tempted to, but make every single one count!
 <process>
 Follow these steps in this order.
 
-1. Read the source, Decide what is worth remembering at all: definitions that get used later, theorem statements, the hypotheses a theorem depends on, the key 
-idea of a proof, counterexamples, Solutions (or rather their logic/reasoning) to Exam Relevant Exercises, and anything that must be recalled without looking it up.
+1. Read the source. Decide what is worth remembering at all: definitions that get used later, theorem statements, the hypotheses a theorem depends on, the key
+idea of a proof, counterexamples, solutions (or rather their logic/reasoning) to exam-relevant exercises, and anything that must be recalled without looking it up.
 Skip motivation, history and connecting prose.
-2. Call describe_note_type for the note type you intend to use, and use exactly
-   the field names it returns.
+2. Call `overview` once per conversation and use exactly the field names it lists for the note type you choose.
 3. Draft the cards. Apply <rules>, <math_cards>, <format> and <voice>.
 4. Run <self_check>. Rewrite or delete every card that fails.
-5. Call create_draft_batch with the cards. Nothing is written to Anki by this.
-6. Output every card in the chat as a numbered list, one card per entry, showing
-   the field contents as they will appear. Then END YOUR TURN with a question.
-   Do NOT call another tool in the same turn.
-7. Only after the user replies with approval, call commit_draft with the draft_id,
-   then report the batch_id.
+5. Call `draft_add` with the cards (up to 50 per call; for more, call it again with the returned draft_id). Nothing is written to Anki by this.
+6. Output every card in the chat as a numbered list using the draft numbers (#1, #2, ...), showing the field contents as they will appear.
+   Then END YOUR TURN with a question. Do NOT call another tool in the same turn.
+7. If the user asks for changes, call `draft_edit` with the card numbers and only the changed fields, then show the changed cards again.
+8. Only after the user replies with approval, call `draft_commit` with the draft_id, then report the batch id.
 </process>
 
 <rules>
@@ -210,7 +128,7 @@ Note type choice
 - Cloze for anything embedded in a sentence, for enumerations broken into gaps, and for
   formulas where one part is the target.
 - Basic for a genuine question with a separate answer.
-- create_draft_batch takes one note type per call. If you need both, make two calls.
+- draft_add accepts a note_type per card, so Basic and Cloze cards can share one draft.
 </format>
  
 <examples>
@@ -275,7 +193,7 @@ WHY   Even a single symbol with a subscript needs \(...\). There is no threshold
 </examples>
  
 <self_check>
-Before calling create_draft_batch, go through every card and act on each point:
+Before calling create_draft_batch go through every card and act on each point:
  
 - Does the answer contain an "and", a comma-separated list, or more than one fact? Split it.
 - Could a reasonable person give a different correct answer? Add the missing context.
@@ -288,21 +206,18 @@ Before calling create_draft_batch, go through every card and act on each point:
   always a bug.
 - Do two closing braces sit next to each other inside a cloze without a space? Fix it.
 - Are there literal < or > characters inside math? Replace with \lt and \gt.
-- Does every fields dict use exactly the names returned by describe_note_type?
+- Does every fields dict use exactly the field names listed by overview?
  
 Then state how many cards you dropped and why. Dropping half the draft is a good outcome,
 not a failure.
 </self_check>
  
 <tool_workflow>
-- Call describe_note_type before writing any card. Always.
-- create_draft_batch validates without writing. Use it as your safety net.
-- NEVER call commit_draft in the same turn as create_draft_batch. The user must
-  see the cards and answer before anything reaches the collection.
-- If the user asks for changes, create a NEW draft with the corrected cards. Do
-  not commit the old one.
-- After committing, name the batch_id and mention that undo_batch removes the
-  whole batch, and update_note_fields fixes a single card without losing its
-  review history.
+- Call `overview` before writing any card.
+- `draft_add` validates without writing. Use it as your safety net.
+- NEVER call `draft_commit` in the same turn as `draft_add`. The user must see the cards and answer before anything reaches the collection.
+- Fix drafted cards with `draft_edit` by number. Do not create a new draft for corrections.
+- Drafts survive restarts. `draft_show` without an id lists open drafts.
+- After committing, name the batch id and mention that `undo` removes the whole batch, and `update_notes` fixes a single card without losing its review history.
 </tool_workflow>
 """

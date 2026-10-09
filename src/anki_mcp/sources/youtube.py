@@ -1,5 +1,6 @@
 import re
 
+from pydantic import BaseModel, Field
 from youtube_transcript_api import (
     FetchedTranscript,
     NoTranscriptFound,
@@ -7,12 +8,31 @@ from youtube_transcript_api import (
     YouTubeTranscriptApi,
 )
 
-from anki_mcp.models import (
-    OutlineSegment,
-    TimeInterval,
-    TranscriptSegment,
-    YouTubeVideoData,
-)
+
+class TranscriptSegment(BaseModel):
+    start_time: float
+    end_time: float
+    text: str
+
+
+class OutlineSegment(BaseModel):
+    timestamp_seconds: float
+    formatted_time: str
+    text_snippet: str
+
+
+class YouTubeVideoData(BaseModel):
+    video_id: str
+    language: str
+    is_translated: bool
+    total_length_seconds: float
+    outline: list[OutlineSegment]
+    transcript: list[TranscriptSegment]
+
+
+class TimeInterval(BaseModel):
+    start_sec: int = Field(description="Start time in seconds")
+    end_sec: int = Field(description="End time in seconds")
 
 
 def extract_video_id(url: str) -> str | None:
@@ -94,7 +114,7 @@ def get_youtube_data(url: str, target_language: str = "en") -> YouTubeVideoData:
 
     return YouTubeVideoData(
         video_id=video_id,
-        langauge=actual_language,
+        language=actual_language,
         is_translated=is_translated,
         total_length_seconds=total_length,
         outline=outline,
@@ -102,7 +122,7 @@ def get_youtube_data(url: str, target_language: str = "en") -> YouTubeVideoData:
     )
 
 
-def extract_Segments(data: YouTubeVideoData, intervals: list[TimeInterval]) -> str:
+def extract_segments(data: YouTubeVideoData, intervals: list[TimeInterval]) -> str:
     result_blocks = []
 
     for interval in intervals:
