@@ -9,10 +9,11 @@ The anki tools run in a small server on the user's computer and talk to Anki thr
 
 Go through the steps in order. Stop at the first one that fails, explain the fix, and continue once the user has done it.
 
-1. **The anki tools exist.** If there are no tools such as `overview`, the plugin's server did not start; whether Anki is open does not matter for this. Ask the user to:
-   - install uv, which starts the server: `brew install uv` on macOS, `curl -LsSf https://astral.sh/uv/install.sh | sh` on Linux, `powershell -c "irm https://astral.sh/uv/install.ps1 | iex"` on Windows;
-   - update the plugin to the newest version;
-   - quit the Claude app completely, open it again and start a new chat.
+1. **The anki tools exist.** If there are no tools such as `overview`, this chat has no connection to the plugin's server; whether Anki is open does not matter for this. Give the user these fixes in this order, each one only if the one before did not help:
+   - Start a new chat. A chat only gets the tools of servers that were running when it started, so a chat opened while the plugin was being installed or updated has none.
+   - Quit the Claude app completely, open it again and start a new chat. The first start can take a minute while uv installs the plugin's dependencies.
+   - Install uv, which starts the server: `brew install uv` on macOS, `curl -LsSf https://astral.sh/uv/install.sh | sh` on Linux, `powershell -c "irm https://astral.sh/uv/install.ps1 | iex"` on Windows. Then restart the Claude app.
+   - Update the plugin to the newest version.
 2. **Anki and AnkiConnect.** Call `overview`.
    - It lists decks and note types: both work.
    - "does not answer" or "not running": Anki is closed or AnkiConnect is missing. The user opens Anki. If that is not enough, they install AnkiConnect in Anki under Tools > Add-ons > Get Add-ons... with the code `2055492159` and restart Anki.
