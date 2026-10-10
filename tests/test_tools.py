@@ -220,3 +220,10 @@ async def test_stats_runs_on_a_fresh_collection(client: Client) -> None:
     text = await call(client, "stats", scope="deck:Math")
     assert "Scope: deck:Math" in text
     assert "No weak cards" in text
+
+
+async def test_tool_schemas_have_no_references(client: Client) -> None:
+    # The Claude desktop app forwards only "properties" and "required" of each schema to chats.
+    for tool in (await client.list_tools()).tools:
+        schema = str(tool.input_schema)
+        assert "$ref" not in schema and "$defs" not in schema, tool.name

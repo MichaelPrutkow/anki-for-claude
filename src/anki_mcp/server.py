@@ -7,12 +7,12 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from importlib.metadata import version
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import httpx
 from mcp.server import MCPServer
 from mcp.server.mcpserver import Context
-from mcp.types import ToolAnnotations
+from mcp.types import Tool, ToolAnnotations
 
 if TYPE_CHECKING:
     from anki_mcp.anki import AnkiClient, NoteTypes
@@ -95,7 +95,31 @@ async def lifespan(server: MCPServer) -> AsyncGenerator[App, None]:
         )
 
 
-mcp = MCPServer("anki", version=version("anki-for-claude"), instructions=INSTRUCTIONS, lifespan=lifespan)
+def inline_refs(schema: dict[str, Any]) -> dict[str, Any]:
+    """Replace every $ref with the definition it points to and drop $defs."""
+    defs = schema.get("$defs", {})
+
+    def resolve(node: Any) -> Any:
+        if isinstance(node, list):
+            return [resolve(item) for item in node]
+        if not isinstance(node, dict):
+            return node
+        if "$ref" in node:
+            target = resolve(defs[node["$ref"].rsplit("/", 1)[-1]])
+            return {**target, **{k: resolve(v) for k, v in node.items() if k != "$ref"}}
+        return {k: resolve(v) for k, v in node.items() if k != "$defs"}
+
+    return resolve(schema)
+
+
+class AnkiServer(MCPServer):
+    async def list_tools(self) -> list[Tool]:
+        # The Claude desktop app passes only "properties" and "required" of a tool schema on to chats,
+        # so a $ref into "$defs" would point nowhere there.
+        return [t.model_copy(update={"input_schema": inline_refs(t.input_schema)}) for t in await super().list_tools()]
+
+
+mcp = AnkiServer("anki", version=version("anki-for-claude"), instructions=INSTRUCTIONS, lifespan=lifespan)
 
 
 def tool(title: str, annotations: ToolAnnotations):

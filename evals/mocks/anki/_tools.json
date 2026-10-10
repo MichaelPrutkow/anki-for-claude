@@ -235,34 +235,29 @@
    "title": "Update notes",
    "description": "Change fields of existing notes. Keeps the review history, so prefer it over deleting and re-adding.\n\nNotes not created by this plugin need force=true: ask the user first. Returns a batch id for undo.\n",
    "inputSchema": {
-    "$defs": {
-     "UpdateIn": {
-      "properties": {
-       "note_id": {
-        "title": "Note Id",
-        "type": "integer"
-       },
-       "fields": {
-        "additionalProperties": {
-         "type": "string"
-        },
-        "description": "Only the fields that change, with their full new content",
-        "title": "Fields",
-        "type": "object"
-       }
-      },
-      "required": [
-       "note_id",
-       "fields"
-      ],
-      "title": "UpdateIn",
-      "type": "object"
-     }
-    },
     "properties": {
      "updates": {
       "items": {
-       "$ref": "#/$defs/UpdateIn"
+       "properties": {
+        "note_id": {
+         "title": "Note Id",
+         "type": "integer"
+        },
+        "fields": {
+         "additionalProperties": {
+          "type": "string"
+         },
+         "description": "Only the fields that change, with their full new content",
+         "title": "Fields",
+         "type": "object"
+        }
+       },
+       "required": [
+        "note_id",
+        "fields"
+       ],
+       "title": "UpdateIn",
+       "type": "object"
       },
       "maxItems": 50,
       "minItems": 1,
@@ -363,63 +358,58 @@
    "title": "Add cards to a draft",
    "description": "Check cards against Anki and add them to a draft. Nothing is written to Anki.\n\nReturns the cards as text to show the user. If any card has a problem, none is added and every problem is listed.\n",
    "inputSchema": {
-    "$defs": {
-     "CardIn": {
-      "properties": {
-       "fields": {
-        "additionalProperties": {
-         "type": "string"
-        },
-        "description": "Field name -> content (HTML), names exactly as overview lists them",
-        "title": "Fields",
-        "type": "object"
-       },
-       "tags": {
-        "default": [],
-        "items": {
-         "type": "string"
-        },
-        "title": "Tags",
-        "type": "array"
-       },
-       "note_type": {
-        "anyOf": [
-         {
-          "type": "string"
-         },
-         {
-          "type": "null"
-         }
-        ],
-        "default": null,
-        "description": "Only if it differs from the draft's note type",
-        "title": "Note Type"
-       },
-       "deck": {
-        "anyOf": [
-         {
-          "type": "string"
-         },
-         {
-          "type": "null"
-         }
-        ],
-        "default": null,
-        "description": "Only if it differs from the draft's deck",
-        "title": "Deck"
-       }
-      },
-      "required": [
-       "fields"
-      ],
-      "title": "CardIn",
-      "type": "object"
-     }
-    },
     "properties": {
      "cards": {
       "items": {
-       "$ref": "#/$defs/CardIn"
+       "properties": {
+        "fields": {
+         "additionalProperties": {
+          "type": "string"
+         },
+         "description": "Field name -> content (HTML), names exactly as overview lists them",
+         "title": "Fields",
+         "type": "object"
+        },
+        "tags": {
+         "default": [],
+         "items": {
+          "type": "string"
+         },
+         "title": "Tags",
+         "type": "array"
+        },
+        "note_type": {
+         "anyOf": [
+          {
+           "type": "string"
+          },
+          {
+           "type": "null"
+          }
+         ],
+         "default": null,
+         "description": "Only if it differs from the draft's note type",
+         "title": "Note Type"
+        },
+        "deck": {
+         "anyOf": [
+          {
+           "type": "string"
+          },
+          {
+           "type": "null"
+          }
+         ],
+         "default": null,
+         "description": "Only if it differs from the draft's deck",
+         "title": "Deck"
+        }
+       },
+       "required": [
+        "fields"
+       ],
+       "title": "CardIn",
+       "type": "object"
       },
       "maxItems": 50,
       "minItems": 1,
@@ -519,58 +509,6 @@
    "title": "Add an image occlusion card to a draft",
    "description": "Add an Image Occlusion note (Anki 23.10+) to a draft. Each mask, or each group of masks, becomes one card.\n\nReturns the image with the masks drawn in. Check that every mask covers exactly its label.\n",
    "inputSchema": {
-    "$defs": {
-     "MaskIn": {
-      "properties": {
-       "label": {
-        "anyOf": [
-         {
-          "type": "string"
-         },
-         {
-          "type": "null"
-         }
-        ],
-        "default": null,
-        "description": "Text on the image (a PDF word or a graph node) to hide",
-        "title": "Label"
-       },
-       "region": {
-        "anyOf": [
-         {
-          "items": {
-           "type": "number"
-          },
-          "maxItems": 4,
-          "minItems": 4,
-          "type": "array"
-         },
-         {
-          "type": "null"
-         }
-        ],
-        "default": null,
-        "description": "Area to hide instead of a label: [left, top, right, bottom] as fractions (0-1) of the image",
-        "title": "Region"
-       },
-       "group": {
-        "anyOf": [
-         {
-          "type": "integer"
-         },
-         {
-          "type": "null"
-         }
-        ],
-        "default": null,
-        "description": "Masks with the same group are asked together on one card",
-        "title": "Group"
-       }
-      },
-      "title": "MaskIn",
-      "type": "object"
-     }
-    },
     "properties": {
      "image": {
       "description": "Image file name from stage_image or render_graph, e.g. 'heart.png'",
@@ -579,7 +517,54 @@
      },
      "masks": {
       "items": {
-       "$ref": "#/$defs/MaskIn"
+       "properties": {
+        "label": {
+         "anyOf": [
+          {
+           "type": "string"
+          },
+          {
+           "type": "null"
+          }
+         ],
+         "default": null,
+         "description": "Text on the image (a PDF word or a graph node) to hide",
+         "title": "Label"
+        },
+        "region": {
+         "anyOf": [
+          {
+           "items": {
+            "type": "number"
+           },
+           "maxItems": 4,
+           "minItems": 4,
+           "type": "array"
+          },
+          {
+           "type": "null"
+          }
+         ],
+         "default": null,
+         "description": "Area to hide instead of a label: [left, top, right, bottom] as fractions (0-1) of the image",
+         "title": "Region"
+        },
+        "group": {
+         "anyOf": [
+          {
+           "type": "integer"
+          },
+          {
+           "type": "null"
+          }
+         ],
+         "default": null,
+         "description": "Masks with the same group are asked together on one card",
+         "title": "Group"
+        }
+       },
+       "title": "MaskIn",
+       "type": "object"
       },
       "maxItems": 50,
       "minItems": 1,
@@ -679,60 +664,6 @@
    "title": "Change cards in a draft",
    "description": "Change or remove cards of a draft by number. Send only the fields that change; the others stay.\n\nReturns the changed cards as text to show the user.\n",
    "inputSchema": {
-    "$defs": {
-     "EditIn": {
-      "properties": {
-       "card": {
-        "description": "Card number in the draft, e.g. 3 for #3",
-        "title": "Card",
-        "type": "integer"
-       },
-       "fields": {
-        "anyOf": [
-         {
-          "additionalProperties": {
-           "type": "string"
-          },
-          "type": "object"
-         },
-         {
-          "type": "null"
-         }
-        ],
-        "default": null,
-        "description": "Only the fields that change",
-        "title": "Fields"
-       },
-       "tags": {
-        "anyOf": [
-         {
-          "items": {
-           "type": "string"
-          },
-          "type": "array"
-         },
-         {
-          "type": "null"
-         }
-        ],
-        "default": null,
-        "description": "Replaces the card's tags",
-        "title": "Tags"
-       },
-       "remove": {
-        "default": false,
-        "description": "Remove the card from the draft",
-        "title": "Remove",
-        "type": "boolean"
-       }
-      },
-      "required": [
-       "card"
-      ],
-      "title": "EditIn",
-      "type": "object"
-     }
-    },
     "properties": {
      "draft_id": {
       "title": "Draft Id",
@@ -740,7 +671,56 @@
      },
      "edits": {
       "items": {
-       "$ref": "#/$defs/EditIn"
+       "properties": {
+        "card": {
+         "description": "Card number in the draft, e.g. 3 for #3",
+         "title": "Card",
+         "type": "integer"
+        },
+        "fields": {
+         "anyOf": [
+          {
+           "additionalProperties": {
+            "type": "string"
+           },
+           "type": "object"
+          },
+          {
+           "type": "null"
+          }
+         ],
+         "default": null,
+         "description": "Only the fields that change",
+         "title": "Fields"
+        },
+        "tags": {
+         "anyOf": [
+          {
+           "items": {
+            "type": "string"
+           },
+           "type": "array"
+          },
+          {
+           "type": "null"
+          }
+         ],
+         "default": null,
+         "description": "Replaces the card's tags",
+         "title": "Tags"
+        },
+        "remove": {
+         "default": false,
+         "description": "Remove the card from the draft",
+         "title": "Remove",
+         "type": "boolean"
+        }
+       },
+       "required": [
+        "card"
+       ],
+       "title": "EditIn",
+       "type": "object"
       },
       "minItems": 1,
       "title": "Edits",
@@ -891,28 +871,6 @@
    "title": "YouTube transcript",
    "description": "Read the transcript of a YouTube video.\n\nA long video returns a timestamped outline instead; call again with 'intervals' to read the parts that matter.\n",
    "inputSchema": {
-    "$defs": {
-     "TimeInterval": {
-      "properties": {
-       "start_sec": {
-        "description": "Start time in seconds",
-        "title": "Start Sec",
-        "type": "integer"
-       },
-       "end_sec": {
-        "description": "End time in seconds",
-        "title": "End Sec",
-        "type": "integer"
-       }
-      },
-      "required": [
-       "start_sec",
-       "end_sec"
-      ],
-      "title": "TimeInterval",
-      "type": "object"
-     }
-    },
     "properties": {
      "url": {
       "title": "Url",
@@ -922,7 +880,24 @@
       "anyOf": [
        {
         "items": {
-         "$ref": "#/$defs/TimeInterval"
+         "properties": {
+          "start_sec": {
+           "description": "Start time in seconds",
+           "title": "Start Sec",
+           "type": "integer"
+          },
+          "end_sec": {
+           "description": "End time in seconds",
+           "title": "End Sec",
+           "type": "integer"
+          }
+         },
+         "required": [
+          "start_sec",
+          "end_sec"
+         ],
+         "title": "TimeInterval",
+         "type": "object"
         },
         "maxItems": 30,
         "type": "array"

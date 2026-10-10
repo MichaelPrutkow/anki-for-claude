@@ -9,7 +9,7 @@ The anki tools run in a small server on the user's computer and talk to Anki thr
 
 Go through the steps in order. Stop at the first one that fails, explain the fix, and continue once the user has done it.
 
-1. **The anki tools exist.** If there are no tools such as `overview`, this chat has no connection to the plugin's server; whether Anki is open does not matter for this. Give the user these fixes in this order, each one only if the one before did not help:
+1. **The anki tools exist.** If `overview` is not among your tools, search for the anki tools first; in some apps they are only loaded on request. If the search finds none either, this chat has no connection to the plugin's server; whether Anki is open does not matter for this. Give the user these fixes in this order, each one only if the one before did not help:
    - Start a new chat. A chat only gets the tools of servers that were running when it started, so a chat opened while the plugin was being installed or updated has none.
    - Quit the Claude app completely, open it again and start a new chat. The first start can take a minute while uv installs the plugin's dependencies.
    - Install uv, which starts the server: `brew install uv` on macOS, `curl -LsSf https://astral.sh/uv/install.sh | sh` on Linux, `powershell -c "irm https://astral.sh/uv/install.ps1 | iex"` on Windows. Then restart the Claude app.
