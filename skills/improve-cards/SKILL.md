@@ -5,7 +5,7 @@ description: Works on the user's existing Anki cards - searches the collection, 
 
 # Improving existing cards
 
-If `overview` and the other anki tools are not among your tools, call `get_device_info` first (search for it if it is not loaded): in the Claude app, that connects the tools on the user's computer to the chat. Then search for the anki tools again. Only if they are still missing, follow the `check-setup` skill.
+If `overview` and the other anki tools are not among your tools, call `get_device_info` (search for it if it is not loaded) and search for the anki tools again. In the Claude app, a chat reaches the tools on the user's computer reliably only if the user added a folder to it before sending the first message. If the tools are still missing, ask the user to start a new chat, add a folder with the Add folder button (for example the folder with their study material) and send the request again. Only if that does not help either, follow the `check-setup` skill.
 
 ## Finding cards
 

@@ -23,7 +23,7 @@ Each image tool saves a PNG under the name you give it into the user's images fo
 
 Look at every thumbnail. Redo the image if something is cut off, too small to read on a phone, or gives the answer away.
 
-If `overview` and the other anki tools are not among your tools, call `get_device_info` first (search for it if it is not loaded): in the Claude app, that connects the tools on the user's computer to the chat. Then search for the anki tools again. Only if they are still missing, follow the `check-setup` skill.
+If `overview` and the other anki tools are not among your tools, call `get_device_info` (search for it if it is not loaded) and search for the anki tools again. In the Claude app, a chat reaches the tools on the user's computer reliably only if the user added a folder to it before sending the first message. If the tools are still missing, ask the user to start a new chat, add a folder with the Add folder button (for example the folder with their study material) and send the request again. Only if that does not help either, follow the `check-setup` skill.
 
 The anki tools run on the user's computer and open files there by absolute path. A file attached to the chat, or a plot you made in a sandbox of your own, is not on that computer: save it there first if you can, otherwise ask the user where the file is.
 

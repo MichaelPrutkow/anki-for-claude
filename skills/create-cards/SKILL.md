@@ -9,7 +9,7 @@ The user will review these cards for years. A weak card costs more than a missin
 
 ## Workflow
 
-If `overview` and the other anki tools are not among your tools, call `get_device_info` first (search for it if it is not loaded): in the Claude app, that connects the tools on the user's computer to the chat. Then search for the anki tools again. Only if they are still missing, follow the `check-setup` skill.
+If `overview` and the other anki tools are not among your tools, call `get_device_info` (search for it if it is not loaded) and search for the anki tools again. In the Claude app, a chat reaches the tools on the user's computer reliably only if the user added a folder to it before sending the first message. If the tools are still missing, ask the user to start a new chat, add a folder with the Add folder button (for example the folder with their study material) and send the request again. Only if that does not help either, follow the `check-setup` skill.
 
 1. **Read the source** and decide what is worth remembering (see below). Read a YouTube video with `youtube_transcript`.
 2. **Call `overview`** once per conversation. Use deck names and field names exactly as it lists them. If the target deck already has cards on the topic, check with `search_notes` so you do not write near-duplicates.
