@@ -88,7 +88,7 @@ cards on request, and adds only the cards you approve. Drafts are saved on disk,
 restarts.
 
 **Pictures where the exam has pictures.** Graphs, trees and automata are drawn with Graphviz in
-one consistent style. Figures from your PDFs are found with their captions (*"Abb. 3.2"*) and
+one consistent style. Figures from your PDFs are found with their captions (e.g. *"Fig. 3.2"*) and
 cut out exactly. Plots are drawn with matplotlib. Image occlusion notes are Anki's native ones,
 and their masks are placed through the PDF's text layer or the graph's node positions, not
 guessed from pixels. Pictures are saved in `~/Pictures/Anki for Claude`, so you can look at them
@@ -174,8 +174,8 @@ Everything runs on your computer, and nothing is sent to the author of this plug
 - **No dialog window may be open in Anki.** A modal blocks AnkiConnect, and every call times out
   until you close it.
 - **Claude Code and the Claude desktop app only.** claude.ai in the browser cannot reach Anki on
-  your computer.
-- **Anki starts automatically on macOS only.** On Windows and Linux, open it yourself.
+  your computer. This is a limitation of the Anki app itself, not the the plugin.
+- **Anki starts automatically on macOS only.** On Windows and Linux, you must open it yourself.
 - **Duplicates are detected the way Anki does it:** only the first field is compared, so two cards
   with the same question count as duplicates.
 - **Deleting cannot be undone.** Prefer fixing a card over deleting it.
@@ -183,12 +183,6 @@ Everything runs on your computer, and nothing is sent to the author of this plug
   Graphviz graph. For other images, Claude places them by region.
 - **FSRS difficulty is read from the review log**, because AnkiConnect does not expose FSRS
   memory states. That is precise enough for ranking.
-
-## Upgrading from 1.x
-
-Remove the old Anki extension (`.mcpb`) under *Settings → Extensions* in the Claude desktop app,
-otherwise Claude sees two sets of Anki tools. Cards created with 1.x keep their `mcp::created`
-tag, and their batches can still be undone.
 
 ## Other MCP clients
 
@@ -220,13 +214,6 @@ uv run pytest            # the tools against an in-memory fake of AnkiConnect, n
 claude plugin eval .     # Claude with the plugin against mocked tools, compared with Claude without it
 claude --plugin-dir .    # try it in Claude Code
 ```
-
-## Personal AI use
-
-I wrote the core of this project myself because I wanted to use it to learn: the AnkiConnect
-client, drafts, the undo journal and the card tools. I used AI assistance for the long card-rule
-prompt and this README, and Claude Code wrote the image and statistics modules in 2.0 and the
-chat review, the tests and the reworked skills in 2.1.
 
 ## Credits
 
