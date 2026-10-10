@@ -20,10 +20,9 @@ class AnkiTimeout(AnkiError):
 
 
 class AnkiClient:
-    def __init__(self, http: httpx.AsyncClient, url: str, auto_launch: bool):
+    def __init__(self, http: httpx.AsyncClient, url: str):
         self._http = http
         self._url = url
-        self._auto_launch = auto_launch
         self._launch_lock = asyncio.Lock()
 
     async def invoke(self, action: str, *, timeout: float = 30.0, **params: Any) -> Any:
@@ -46,11 +45,6 @@ class AnkiClient:
         try:
             return await self._send(payload, timeout)
         except httpx.ConnectError:
-            if not self._auto_launch:
-                raise AnkiError(
-                    f"AnkiConnect does not answer at {self._url}. Ask the user to start Anki "
-                    "and to check that the AnkiConnect add-on is installed."
-                ) from None
             await self._ensure_running()
             return await self._send(payload, timeout)
 
@@ -71,7 +65,10 @@ class AnkiClient:
             if await self._is_up():
                 return
             if sys.platform != "darwin":
-                raise AnkiError("Anki is not running. Ask the user to start it.")
+                raise AnkiError(
+                    "AnkiConnect does not answer. Ask the user to start Anki and to check that the AnkiConnect "
+                    "add-on is installed."
+                )
             process = await asyncio.create_subprocess_exec("open", "-ga", "Anki")
             if await process.wait() != 0:
                 raise AnkiError("Anki is not installed, or macOS could not start it. Ask the user to start it.")

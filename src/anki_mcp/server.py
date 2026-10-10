@@ -51,6 +51,9 @@ WEB_READ = _annotations(True, False, True, web=True)
 SYNC = _annotations(False, False, True, web=True)
 
 
+ANKI_CONNECT_URL = "http://127.0.0.1:8765"
+
+
 def _env(name: str) -> str | None:
     return os.environ.get(name, "").strip() or None
 
@@ -81,17 +84,15 @@ async def lifespan(server: MCPServer) -> AsyncGenerator[App, None]:
 
     data_dir = Path(_env("CLAUDE_PLUGIN_DATA") or Path.home() / ".anki-mcp")
     data_dir.mkdir(parents=True, exist_ok=True)
-    url = (_env("ANKI_CONNECT_URL") or "http://127.0.0.1:8765").rstrip("/")
-    auto_launch = (_env("ANKI_AUTO_LAUNCH") or "true").lower() in {"1", "true", "yes", "on"}
     async with httpx.AsyncClient(timeout=30.0) as http:
-        anki = AnkiClient(http, url, auto_launch)
+        anki = AnkiClient(http, ANKI_CONNECT_URL)
         yield App(
             anki=anki,
             note_types=NoteTypes(anki),
             drafts=DraftStore(data_dir / "drafts"),
             journal=Journal(data_dir / "journal.jsonl"),
             images=ImageStore(Path.home() / "Pictures" / "Anki for Claude"),
-            roots=[Path(p).expanduser() for p in (_env("ANKI_WORKSPACE"), _env("CLAUDE_PROJECT_DIR")) if p],
+            roots=[Path(p) for p in [_env("CLAUDE_PROJECT_DIR")] if p],
         )
 
 

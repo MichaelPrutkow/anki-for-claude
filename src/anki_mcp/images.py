@@ -216,8 +216,8 @@ _FILE_ATTRIBUTES = re.compile(r"\b(image|shapefile|imagepath|fontpath|imagescale
 
 
 def dot_command() -> str | None:
-    path = os.pathsep.join([os.environ.get("PATH", ""), "/opt/homebrew/bin", "/usr/local/bin", "/usr/bin"])
-    return shutil.which("dot", path=path)
+    # Apps started from the macOS Dock do not have Homebrew's folders in PATH.
+    return shutil.which("dot") or shutil.which("dot", path=os.pathsep.join(["/opt/homebrew/bin", "/usr/local/bin"]))
 
 
 def render_dot(source: str) -> tuple[Image.Image, list[dict[str, Any]]]:

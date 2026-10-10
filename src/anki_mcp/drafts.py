@@ -4,12 +4,12 @@ then draft_commit adds them."""
 import asyncio
 import os
 import re
-import secrets
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Annotated, Any
+from uuid import uuid4
 
 from mcp.server.mcpserver import Image as McpImage
 from mcp.server.mcpserver.exceptions import ToolError
@@ -73,7 +73,7 @@ class DraftStore:
                 self.delete(draft.id)
 
     def create(self, **values: Any) -> Draft:
-        draft = Draft(id="d_" + secrets.token_hex(3), updated=_now(), **values)
+        draft = Draft(id="d_" + uuid4().hex[:6], updated=_now(), **values)
         self._save(draft)
         return draft
 
@@ -514,7 +514,7 @@ async def draft_commit(
     Cards that fail stay in the draft with the reason. The draft is deleted when no cards are left.
     """
     a = app(ctx)
-    batch_id = secrets.token_hex(4)
+    batch_id = uuid4().hex[:8]
     async with a.drafts.edit(draft_id) as draft:
         wanted = set(cards) if cards is not None else {card.n for card in draft.cards}
         missing = sorted(wanted - {card.n for card in draft.cards})

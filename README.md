@@ -34,7 +34,7 @@ https://github.com/user-attachments/assets/00ac5217-9e81-4b8c-8479-c9aa38729dc4
 - **Anki 23.10 or newer** with the [AnkiConnect](https://ankiweb.net/shared/info/2055492159)
   add-on: in Anki, *Tools → Add-ons → Get Add-ons*, code `2055492159`, then restart Anki.
 - **[uv](https://docs.astral.sh/uv/)**, which starts the plugin's Python server: `brew install uv`
-  on macOS, or `curl -LsSf https://astral.sh/uv/install.sh | sh`.
+  on macOS, otherwise see the [uv installation guide](https://docs.astral.sh/uv/getting-started/installation/).
 - **Claude Code** or the **Claude desktop app**.
 - Optional: **[Graphviz](https://graphviz.org/download/)** for drawn graphs, trees and automata
   (`brew install graphviz`).
@@ -55,8 +55,9 @@ The first start takes a few seconds while uv installs the dependencies. Then ask
 *"check my Anki setup"*.
 
 In the desktop app, **add a folder to the chat before you send the first message**, for example
-the folder with your lecture material. Only then does the chat reliably reach the plugin's tools on
-your computer, and Claude needs the folder anyway to read your PDFs.
+the folder with your lecture material. The plugin's server runs on your computer, and such servers
+work in Claude Code and Cowork but not in a plain chat; with a folder, the chat reliably reaches
+them. Claude needs the folder anyway to read your PDFs.
 
 Nothing needs to be configured. The plugin talks to AnkiConnect on `http://127.0.0.1:8765` and
 starts Anki when it is not running (macOS only).
@@ -177,8 +178,9 @@ Everything runs on your computer, and nothing is sent to the author of this plug
 
 - **No dialog window may be open in Anki.** A modal blocks AnkiConnect, and every call times out
   until you close it.
-- **Claude Code and the Claude desktop app only.** claude.ai in the browser cannot reach Anki on
-  your computer. Claude.ai in the browser cannot reach servers on your computer, and AnkiConnect runs there.
+- **Claude Code and Cowork only.** The plugin's server runs on your computer, and a plain chat,
+  including claude.ai in the browser, cannot reach it. In the desktop app, add a folder to the chat
+  before the first message.
 - **Anki starts automatically on macOS only.** On Windows and Linux, you must open it yourself.
 - **Duplicates are detected the way Anki does it:** only the first field is compared, so two cards
   with the same question count as duplicates.

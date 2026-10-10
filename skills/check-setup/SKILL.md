@@ -12,7 +12,7 @@ Go through the steps in order. Stop at the first one that fails, explain the fix
 1. **The anki tools exist.** If `overview` is not among your tools, call `get_device_info` (search for it if it is not loaded) and search for the anki tools again. If they are still missing, this chat does not reach the plugin's server on the user's computer; whether Anki is open does not matter for this. Give the user these fixes in this order, each one only if the one before did not help:
    - In the Claude app: start a new chat, add a folder with the Add folder button before sending the first message (for example the folder with the study material), then send the request again. A chat reaches the tools on the user's computer reliably only with a folder.
    - Quit the Claude app completely, open it again and start a new chat. The first start can take a minute while uv installs the plugin's dependencies.
-   - Install uv, which starts the server: `brew install uv` on macOS, `curl -LsSf https://astral.sh/uv/install.sh | sh` on Linux, `powershell -c "irm https://astral.sh/uv/install.ps1 | iex"` on Windows. Then restart the Claude app.
+   - Install uv, which starts the server: `brew install uv` on macOS, otherwise as the uv installation guide describes (https://docs.astral.sh/uv/getting-started/installation/). Then restart the Claude app.
    - Update the plugin to the newest version.
 2. **Anki and AnkiConnect.** Call `overview`.
    - It lists decks and note types: both work.

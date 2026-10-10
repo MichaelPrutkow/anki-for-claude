@@ -1,8 +1,8 @@
 import json
-import secrets
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated, Any
+from uuid import uuid4
 
 from mcp.server.mcpserver.exceptions import ToolError
 from pydantic import BaseModel, Field
@@ -170,7 +170,7 @@ async def update_notes(
 
     lines = []
     if applied:
-        batch_id = secrets.token_hex(4)
+        batch_id = uuid4().hex[:8]
         a.journal.append({"batch_id": batch_id, "kind": "update", "updated": applied})
         noun = "note" if len(applied) == 1 else "notes"
         lines.append(f'Updated {len(applied)} {noun}. Batch id {batch_id}: undo("{batch_id}") restores them.')
@@ -239,7 +239,7 @@ async def undo(ctx: Ctx, batch_id: str) -> str:
         if conflicts:
             message += f" Left alone because they were edited since: {conflicts}."
 
-    a.journal.append({"batch_id": secrets.token_hex(4), "kind": "undo", "undo_of": batch_id})
+    a.journal.append({"batch_id": uuid4().hex[:8], "kind": "undo", "undo_of": batch_id})
     return message
 
 
