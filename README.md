@@ -1,6 +1,6 @@
 # Anki for Claude
 
-**Turn lecture material, YouTube videos or anything else in your chat into Anki cards.**
+**Turn your lecture material, YouTube videos or anything else in your chat into Anki cards.**
 
 [![Stars](https://img.shields.io/github/stars/MichaelPrutkow/anki-for-claude?style=flat&color=yellow)](https://github.com/MichaelPrutkow/anki-for-claude/stargazers)
 [![MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
@@ -8,7 +8,7 @@
 ![Anki 23.10+](https://img.shields.io/badge/Anki-23.10%2B-orange)
 ![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-3776AB)
 
-A Claude plugin that reads your lecture material, transcribes YouTube videos and writes Anki
+'Anki for Claude' is a Claude plugin that reads your lecture material, transcribes YouTube videos and writes Anki
 flashcards from it, including pictures and native image occlusion cards. It talks to your
 running Anki through [AnkiConnect](https://ankiweb.net/shared/info/2055492159).
 
@@ -101,8 +101,6 @@ cloze deletions), separate cards for a theorem's statement, hypotheses and key i
 rules inspired by [Wikipedia: Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing).
 The tools also catch the most common formatting slips: LaTeX outside `\( \)`, `$...$` math that
 Anki does not render, a `<` inside a formula, and braces that end a cloze too early.
-
-![Example of generated Anki cards](https://github.com/user-attachments/assets/d1c2b2d4-5ec1-4048-b8a8-94ab4bd81a61)
 
 **Your review history decides what to fix.** `stats` ranks the notes you struggle with by again
 rate, lapses, FSRS difficulty, answer time, leeches and red flags, with a hint at the cause.
