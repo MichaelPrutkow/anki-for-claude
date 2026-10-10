@@ -1,3 +1,5 @@
+![Anki for Claude logo](.claude-plugin/icon.svg)
+
 # Anki for Claude
 
 **Turn your lecture material, YouTube videos or anything else in your chat into Anki cards.**
@@ -166,7 +168,7 @@ Everything runs on your computer, and nothing is sent to the author of this plug
 
 - **Anki:** the plugin talks to AnkiConnect on `127.0.0.1`.
 - **Stored on your computer:** drafts (deleted after 14 days without changes) and the undo
-  journal in Claude's plugin data folder, pictures in `~/Pictures/Anki for Claude` until you
+  journal in `~/.anki-mcp`, pictures in `~/Pictures/Anki for Claude` until you
   delete them.
 - **Sent elsewhere, only when you ask for it:** the video id to YouTube for a transcript, a
   request to the web address of an image you want on a card, and your collection to AnkiWeb

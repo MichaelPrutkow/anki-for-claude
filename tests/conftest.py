@@ -20,8 +20,6 @@ def anki(monkeypatch: pytest.MonkeyPatch, tmp_path) -> FakeAnki:
     real_client = httpx.AsyncClient
     monkeypatch.setattr(httpx, "AsyncClient", lambda **kwargs: real_client(transport=fake.transport(), **kwargs))
     monkeypatch.setenv("HOME", str(tmp_path))
-    monkeypatch.setenv("CLAUDE_PLUGIN_DATA", str(tmp_path / "data"))
-    monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(tmp_path))
     return fake
 
 

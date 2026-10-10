@@ -1,7 +1,7 @@
 {
   "name": "anki",
   "displayName": "Anki Flashcards",
-  "version": "2.1.4",
+  "version": "2.1.5",
   "description": "Create and improve Anki flashcards with Claude: card-writing rules, drafts you approve in the chat, pictures and image occlusion, and statistics on the cards you struggle with. Unofficial, not affiliated with Ankitects.",
   "author": {
     "name": "Michael Prutkow",

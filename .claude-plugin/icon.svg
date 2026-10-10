@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="72" height="72">
   <title>Anki Flashcards</title>
   <rect width="256" height="256" fill="#FFFFFF"/>
   <path fill="#0000FF" d="M52 52H94V76H76V180H94V204H52ZM204 52H162V76H180V180H162V204H204ZM89 152H107V170H89ZM119 152H137V170H119ZM149 152H167V170H149Z"/>

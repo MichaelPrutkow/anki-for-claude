@@ -152,9 +152,10 @@ async def test_images_are_named_shown_and_copied_on_commit(client: Client, anki:
 async def test_same_name_different_picture_gets_a_number(client: Client, tmp_path: Path) -> None:
     for i, colour in enumerate(["red", "blue"]):
         Image.new("RGB", (100, 100), colour).save(tmp_path / f"p{i}.png")
-    first = await call(client, "stage_image", source="p0.png", name="plot")
-    second = await call(client, "stage_image", source="p1.png", name="plot")
-    again = await call(client, "stage_image", source="p0.png", name="plot")
+    first = await call(client, "stage_image", source=str(tmp_path / "p0.png"), name="plot")
+    second = await call(client, "stage_image", source=str(tmp_path / "p1.png"), name="plot")
+    again = await call(client, "stage_image", source=str(tmp_path / "p0.png"), name="plot")
+    assert "is not an absolute path" in await fails(client, "stage_image", source="p0.png", name="plot")
     assert "Saved plot.png" in first and "Saved plot-2.png" in second and "Saved plot.png" in again
 
 

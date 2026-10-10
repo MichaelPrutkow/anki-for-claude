@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
@@ -54,10 +53,6 @@ SYNC = _annotations(False, False, True, web=True)
 ANKI_CONNECT_URL = "http://127.0.0.1:8765"
 
 
-def _env(name: str) -> str | None:
-    return os.environ.get(name, "").strip() or None
-
-
 @dataclass
 class App:
     anki: AnkiClient
@@ -65,7 +60,6 @@ class App:
     drafts: DraftStore
     journal: Journal
     images: ImageStore
-    roots: list[Path]  # folders where relative file names are looked up
 
 
 Ctx = Context[App]
@@ -82,7 +76,7 @@ async def lifespan(server: MCPServer) -> AsyncGenerator[App, None]:
     from anki_mcp.drafts import DraftStore
     from anki_mcp.images import ImageStore
 
-    data_dir = Path(_env("CLAUDE_PLUGIN_DATA") or Path.home() / ".anki-mcp")
+    data_dir = Path.home() / ".anki-mcp"
     data_dir.mkdir(parents=True, exist_ok=True)
     async with httpx.AsyncClient(timeout=30.0) as http:
         anki = AnkiClient(http, ANKI_CONNECT_URL)
@@ -92,7 +86,6 @@ async def lifespan(server: MCPServer) -> AsyncGenerator[App, None]:
             drafts=DraftStore(data_dir / "drafts"),
             journal=Journal(data_dir / "journal.jsonl"),
             images=ImageStore(Path.home() / "Pictures" / "Anki for Claude"),
-            roots=[Path(p) for p in [_env("CLAUDE_PROJECT_DIR")] if p],
         )
 
 

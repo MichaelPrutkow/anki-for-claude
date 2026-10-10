@@ -155,22 +155,22 @@ def trim(image: Image.Image, margin: int = 8) -> Image.Image:
     )
 
 
-def resolve_path(source: str, roots: list[Path], suffixes: set[str]) -> Path:
-    """Find a file on the user's computer. Relative paths are looked up in the workspace folders."""
+def resolve_path(source: str, suffixes: set[str]) -> Path:
+    """A file on the user's computer, by absolute path."""
     path = Path(source).expanduser()
     if path.suffix.lower() not in suffixes:
         raise ToolError(f"'{source}': only {', '.join(sorted(suffixes))} files can be opened.")
-    candidates = [path] if path.is_absolute() else [root / path for root in roots]
-    for candidate in candidates:
-        if candidate.is_file():
-            return candidate
+    if not path.is_absolute():
+        raise ToolError(f"'{source}' is not an absolute path. Pass the full path of the file on the user's computer.")
+    if path.is_file():
+        return path
     raise ToolError(
         f"'{source}' is not on the user's computer. Pass an absolute path. Files attached to the chat are not on "
         "the user's computer: save the file there first, or ask the user where it is."
     )
 
 
-async def load_image(source: str, roots: list[Path]) -> Image.Image:
+async def load_image(source: str) -> Image.Image:
     try:
         if source.startswith(("http://", "https://")):
             async with httpx.AsyncClient(timeout=20, follow_redirects=True) as http:
@@ -180,7 +180,7 @@ async def load_image(source: str, roots: list[Path]) -> Image.Image:
                 raise ToolError("The image is larger than 10 MB.")
             with Image.open(io.BytesIO(response.content)) as img:
                 return img.convert("RGB")
-        with Image.open(resolve_path(source, roots, IMAGE_SUFFIXES)) as img:
+        with Image.open(resolve_path(source, IMAGE_SUFFIXES)) as img:
             return img.convert("RGB")
     except httpx.HTTPError as exc:
         raise ToolError(f"Could not download '{source}': {exc}") from None
@@ -298,7 +298,7 @@ async def stage_image(
     box = _box(region)
     labels: list[dict[str, Any]] = []
     if source.lower().endswith(".pdf"):
-        path = resolve_path(source, a.roots, {".pdf"})
+        path = resolve_path(source, {".pdf"})
         if figure:
             page = pdf.page_of(figure)
             box = await asyncio.to_thread(pdf.figure_box, path, figure)
@@ -306,7 +306,7 @@ async def stage_image(
             raise ToolError("For a PDF, pass 'figure' (an id from pdf_figures) or 'page'.")
         image, labels = await asyncio.to_thread(pdf.crop, path, page, box or (0, 0, 1, 1))
     else:
-        image = await load_image(source, a.roots)
+        image = await load_image(source)
         if box:
             w, h = image.size
             image = image.crop((round(box[0] * w), round(box[1] * h), round(box[2] * w), round(box[3] * h)))
@@ -326,7 +326,7 @@ async def pdf_figures(
     ] = False,
 ) -> list[Any]:
     """List the figures (diagrams, photos, plots) on PDF pages with their ids, regions and captions."""
-    pdf_path = resolve_path(path, app(ctx).roots, {".pdf"})
+    pdf_path = resolve_path(path, {".pdf"})
     selected, figures = await asyncio.to_thread(pdf.find_figures, pdf_path, pages)
     where = f"page {pages}" if pages.strip().isdigit() else f"pages {pages}"
     if figures:
