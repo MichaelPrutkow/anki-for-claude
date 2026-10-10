@@ -5,6 +5,8 @@ description: Works on the user's existing Anki cards - searches the collection, 
 
 # Improving existing cards
 
+If `overview` and the other anki tools are not among your tools, call `get_device_info` first (search for it if it is not loaded): in the Claude app, that connects the tools on the user's computer to the chat. Then search for the anki tools again. Only if they are still missing, follow the `check-setup` skill.
+
 ## Finding cards
 
 `search_notes` takes Anki's search syntax, and the query has to follow it exactly:

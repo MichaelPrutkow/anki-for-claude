@@ -9,6 +9,8 @@ The user will review these cards for years. A weak card costs more than a missin
 
 ## Workflow
 
+If `overview` and the other anki tools are not among your tools, call `get_device_info` first (search for it if it is not loaded): in the Claude app, that connects the tools on the user's computer to the chat. Then search for the anki tools again. Only if they are still missing, follow the `check-setup` skill.
+
 1. **Read the source** and decide what is worth remembering (see below). Read a YouTube video with `youtube_transcript`.
 2. **Call `overview`** once per conversation. Use deck names and field names exactly as it lists them. If the target deck already has cards on the topic, check with `search_notes` so you do not write near-duplicates.
 3. **Write the cards** by the rules below, then go through the checklist at the end. Rewrite or drop every card that fails.
