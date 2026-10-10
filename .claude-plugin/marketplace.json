@@ -6,7 +6,7 @@
     {
       "name": "anki",
       "source": "./",
-      "description": "Anki flashcards for Claude: card rules, visual preview, images, image occlusion and weak-card statistics"
+      "description": "Anki flashcards for Claude: card-writing rules, drafts you approve in the chat, pictures, image occlusion and weak-card statistics"
     }
   ]
 }

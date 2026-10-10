@@ -8,10 +8,15 @@ import httpx
 from mcp.server.mcpserver.exceptions import ToolError
 
 API_VERSION = 6
+LAUNCH_WAIT_SECONDS = 30
 
 
 class AnkiError(ToolError):
     """Anything that went wrong talking to Anki. The message is shown to Claude."""
+
+
+class AnkiTimeout(AnkiError):
+    pass
 
 
 class AnkiClient:
@@ -25,7 +30,7 @@ class AnkiClient:
         body = await self._request({"action": action, "version": API_VERSION, "params": params}, timeout)
         return _unwrap(action, body)
 
-    async def multi(self, calls: list[tuple[str, dict[str, Any]]], *, timeout: float = 60.0) -> list[Any]:
+    async def multi(self, calls: list[tuple[str, dict[str, Any]]], *, timeout: float = 50.0) -> list[Any]:
         """Several actions in one request. Failed actions come back as AnkiError instead of raising."""
         actions = [{"action": a, "version": API_VERSION, "params": p} for a, p in calls]
         results = await self.invoke("multi", timeout=timeout, actions=actions)
@@ -42,7 +47,10 @@ class AnkiClient:
             return await self._send(payload, timeout)
         except httpx.ConnectError:
             if not self._auto_launch:
-                raise AnkiError(f"AnkiConnect doesn't respond at {self._url}. Is Anki running?") from None
+                raise AnkiError(
+                    f"AnkiConnect does not answer at {self._url}. Ask the user to start Anki "
+                    "and to check that the AnkiConnect add-on is installed."
+                ) from None
             await self._ensure_running()
             return await self._send(payload, timeout)
 
@@ -50,25 +58,31 @@ class AnkiClient:
         try:
             response = await self._http.post(self._url, json=payload, timeout=timeout)
         except httpx.TimeoutException:
-            raise AnkiError("Anki doesn't respond in time. Is a dialog window open?") from None
+            raise AnkiTimeout(
+                "Anki did not answer in time. Usually a dialog window is open in Anki: ask the user to close it."
+            ) from None
         try:
             return response.json()
         except ValueError:
-            raise AnkiError(f"The answer from {self._url} isn't JSON. Is AnkiConnect running there?") from None
+            raise AnkiError(f"The answer from {self._url} is not JSON. Is AnkiConnect running there?") from None
 
     async def _ensure_running(self) -> None:
         async with self._launch_lock:
             if await self._is_up():
                 return
             if sys.platform != "darwin":
-                raise AnkiError("Anki is not running. Please start it (auto-start only works on macOS).")
+                raise AnkiError("Anki is not running. Ask the user to start it.")
             process = await asyncio.create_subprocess_exec("open", "-ga", "Anki")
-            await process.wait()
-            for _ in range(45):
+            if await process.wait() != 0:
+                raise AnkiError("Anki is not installed, or macOS could not start it. Ask the user to start it.")
+            for _ in range(LAUNCH_WAIT_SECONDS):
                 await asyncio.sleep(1)
                 if await self._is_up():
                     return
-            raise AnkiError("Anki started, but AnkiConnect doesn't answer. Is AnkiConnect installed?")
+            raise AnkiError(
+                "Anki was started, but AnkiConnect does not answer. Either a window is waiting in Anki "
+                "(for example the profile chooser) or the AnkiConnect add-on is not installed."
+            )
 
     async def _is_up(self) -> bool:
         try:
@@ -89,7 +103,7 @@ def _unwrap(action: str, body: Any) -> Any:
 Kind = Literal["basic", "cloze", "io"]
 
 IO_STOCK_KIND = 6
-IO_TAGS = {0: "occlusion", 1: "image", 2: "header", 3: "back_extra", 4: "comments"}
+IO_ROLES = {0: "occlusion", 1: "image", 2: "header", 3: "back_extra", 4: "comments"}
 
 
 @dataclass(frozen=True)
@@ -106,11 +120,15 @@ class NoteType:
         if model.get("originalStockKind") == IO_STOCK_KIND:
             io_fields = {}
             for f in flds:
-                role = IO_TAGS.get(f["tag"] if f.get("tag") is not None else f["ord"])
+                role = IO_ROLES.get(f["tag"] if f.get("tag") is not None else f["ord"])
                 if role:
                     io_fields[role] = f["name"]
             return cls(model["name"], "io", names, io_fields)
         return cls(model["name"], "cloze" if model.get("type") == 1 else "basic", names)
+
+    @property
+    def label(self) -> str:
+        return {"basic": "basic", "cloze": "cloze", "io": "image occlusion"}[self.kind]
 
     def normalize(self, fields: dict[str, str]) -> tuple[dict[str, str], list[str]]:
         """Map field names case-insensitively to the real ones. Returns (fields, unknown names)."""
@@ -127,13 +145,12 @@ class NoteType:
 
 
 class NoteTypes:
-    """Note types and their templates, cached for 5 minutes."""
+    """The collection's note types, cached for five minutes."""
 
     def __init__(self, anki: AnkiClient):
         self._anki = anki
         self._cache: dict[str, NoteType] = {}
         self._loaded_at = 0.0
-        self._styling: dict[str, tuple[dict[str, dict[str, str]], str]] = {}
 
     async def all(self) -> list[NoteType]:
         if time.monotonic() - self._loaded_at > 300:
@@ -147,17 +164,8 @@ class NoteTypes:
             raise AnkiError(f"Note type '{name}' does not exist. Available: {', '.join(sorted(self._cache))}")
         return self._cache[name]
 
-    async def styling(self, name: str) -> tuple[dict[str, dict[str, str]], str]:
-        """Card templates and CSS of a note type."""
-        if name not in self._styling:
-            templates = await self._anki.invoke("modelTemplates", modelName=name)
-            css = await self._anki.invoke("modelStyling", modelName=name)
-            self._styling[name] = (templates, css["css"])
-        return self._styling[name]
-
     async def _reload(self) -> None:
         names = await self._anki.invoke("modelNames")
         models = await self._anki.invoke("findModelsByName", modelNames=names)
         self._cache = {m["name"]: NoteType.from_anki(m) for m in models}
         self._loaded_at = time.monotonic()
-        self._styling.clear()

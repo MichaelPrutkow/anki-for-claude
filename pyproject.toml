@@ -1,6 +1,6 @@
 [project]
 name = "anki-for-claude"
-version = "2.0.1"
+version = "2.1.0"
 description = "Claude plugin and MCP server for creating and maintaining Anki flashcards"
 readme = "README.md"
 license = "MIT"
@@ -8,15 +8,12 @@ license-files = ["LICENSE"]
 authors = [
     { name = "Michael Prutkow", email = "michael.prutkow@tum.de" }
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "httpx>=0.28.1",
     "mcp>=2,<3",
     "pdfplumber>=0.11.10",
     "pillow>=12.3.0",
-    "pypdfium2>=5.14.0",
-    "starlette>=1.6.0",
-    "uvicorn>=0.52.4",
     "youtube-transcript-api>=1.2.4",
 ]
 keywords = ["anki", "mcp", "flashcards", "spaced-repetition", "model-context-protocol"]
@@ -24,6 +21,11 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Intended Audience :: End Users/Desktop",
     "Topic :: Education",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4",
 ]
 
 [project.urls]
@@ -39,3 +41,9 @@ build-backend = "uv_build"
 
 [tool.uv.build-backend]
 module-name = "anki_mcp"
+
+[tool.ruff]
+line-length = 120
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

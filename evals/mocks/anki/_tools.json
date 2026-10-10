@@ -1,0 +1,959 @@
+{
+ "tools": [
+  {
+   "name": "stage_image",
+   "title": "Save an image for a card",
+   "description": "Save an image file, a PDF figure or part of a PDF page for a card and return its <img> tag.\n\nThe image goes into the user's images folder; Anki gets a copy with draft_commit. Look at the returned thumbnail.\n",
+   "inputSchema": {
+    "properties": {
+     "source": {
+      "description": "Image or PDF on the user's computer (absolute path), or an image URL",
+      "title": "Source",
+      "type": "string"
+     },
+     "name": {
+      "description": "Short file name, e.g. 'mitral-valve'",
+      "title": "Name",
+      "type": "string"
+     },
+     "figure": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "PDF: figure id from pdf_figures, e.g. 'p3f1'",
+      "title": "Figure"
+     },
+     "page": {
+      "anyOf": [
+       {
+        "minimum": 1,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "PDF: page number, when no figure is given",
+      "title": "Page"
+     },
+     "region": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "number"
+        },
+        "maxItems": 4,
+        "minItems": 4,
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Part to cut out: [left, top, right, bottom] as fractions (0-1) of the page or image",
+      "title": "Region"
+     }
+    },
+    "required": [
+     "source",
+     "name"
+    ],
+    "title": "stage_imageArguments",
+    "type": "object"
+   },
+   "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "pdf_figures",
+   "title": "Find figures in a PDF",
+   "description": "List the figures (diagrams, photos, plots) on PDF pages with their ids, regions and captions.",
+   "inputSchema": {
+    "properties": {
+     "path": {
+      "description": "PDF on the user's computer (absolute path)",
+      "title": "Path",
+      "type": "string"
+     },
+     "pages": {
+      "default": "1",
+      "description": "Pages to search, e.g. '3' or '2-5,8' (at most 20)",
+      "title": "Pages",
+      "type": "string"
+     },
+     "show_page": {
+      "default": false,
+      "description": "Also return the first page as a picture, with the figures boxed and a 10% grid",
+      "title": "Show Page",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "path"
+    ],
+    "title": "pdf_figuresArguments",
+    "type": "object"
+   },
+   "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "render_graph",
+   "title": "Draw a graph",
+   "description": "Draw a graph, tree or automaton with Graphviz and return its <img> tag for a card field.\n\nThe image goes into the user's images folder. Node labels can be hidden later with draft_add_occlusion.\n",
+   "inputSchema": {
+    "properties": {
+     "dot": {
+      "description": "Graphviz DOT source, e.g. 'digraph { A -> B }'",
+      "title": "Dot",
+      "type": "string"
+     },
+     "name": {
+      "description": "Short file name, e.g. 'dfs-tree'",
+      "title": "Name",
+      "type": "string"
+     }
+    },
+    "required": [
+     "dot",
+     "name"
+    ],
+    "title": "render_graphArguments",
+    "type": "object"
+   },
+   "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "overview",
+   "title": "Decks and note types",
+   "description": "The decks with their card counts and the note types with their exact field names. Call it before drafting.",
+   "inputSchema": {
+    "properties": {
+     "deck": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Only this deck and its subdecks",
+      "title": "Deck"
+     }
+    },
+    "title": "overviewArguments",
+    "type": "object"
+   },
+   "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "search_notes",
+   "title": "Search notes",
+   "description": "Find notes with Anki's search syntax. One line per note, newest first.",
+   "inputSchema": {
+    "properties": {
+     "query": {
+      "description": "Anki search, e.g. 'deck:GAD tag:heap' or 'nid:1234'",
+      "title": "Query",
+      "type": "string"
+     },
+     "limit": {
+      "default": 20,
+      "maximum": 100,
+      "minimum": 1,
+      "title": "Limit",
+      "type": "integer"
+     },
+     "fields": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Only show these fields",
+      "title": "Fields"
+     },
+     "max_chars": {
+      "default": 120,
+      "description": "Characters shown per field",
+      "maximum": 2000,
+      "minimum": 20,
+      "title": "Max Chars",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "query"
+    ],
+    "title": "search_notesArguments",
+    "type": "object"
+   },
+   "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "update_notes",
+   "title": "Update notes",
+   "description": "Change fields of existing notes. Keeps the review history, so prefer it over deleting and re-adding.\n\nNotes not created by this plugin need force=true: ask the user first. Returns a batch id for undo.\n",
+   "inputSchema": {
+    "$defs": {
+     "UpdateIn": {
+      "properties": {
+       "note_id": {
+        "title": "Note Id",
+        "type": "integer"
+       },
+       "fields": {
+        "additionalProperties": {
+         "type": "string"
+        },
+        "description": "Only the fields that change, with their full new content",
+        "title": "Fields",
+        "type": "object"
+       }
+      },
+      "required": [
+       "note_id",
+       "fields"
+      ],
+      "title": "UpdateIn",
+      "type": "object"
+     }
+    },
+    "properties": {
+     "updates": {
+      "items": {
+       "$ref": "#/$defs/UpdateIn"
+      },
+      "maxItems": 50,
+      "minItems": 1,
+      "title": "Updates",
+      "type": "array"
+     },
+     "force": {
+      "default": false,
+      "description": "Needed for notes the user wrote. Ask the user first",
+      "title": "Force",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "updates"
+    ],
+    "title": "update_notesArguments",
+    "type": "object"
+   },
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": true,
+    "idempotentHint": true,
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "delete_notes",
+   "title": "Delete notes",
+   "description": "Delete notes created by this plugin, with their review history. This cannot be undone.\n\nOnly for cards that should not exist at all; fix wrong cards with update_notes instead.\n",
+   "inputSchema": {
+    "properties": {
+     "note_ids": {
+      "items": {
+       "type": "integer"
+      },
+      "maxItems": 100,
+      "minItems": 1,
+      "title": "Note Ids",
+      "type": "array"
+     }
+    },
+    "required": [
+     "note_ids"
+    ],
+    "title": "delete_notesArguments",
+    "type": "object"
+   },
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": true,
+    "idempotentHint": true,
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "undo",
+   "title": "Undo a batch",
+   "description": "Revert a draft_commit or update_notes by its batch id: added notes are deleted, changed fields restored.\n\nA note the user edited since is left alone.\n",
+   "inputSchema": {
+    "properties": {
+     "batch_id": {
+      "title": "Batch Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "batch_id"
+    ],
+    "title": "undoArguments",
+    "type": "object"
+   },
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": true,
+    "idempotentHint": true,
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "sync",
+   "title": "Sync with AnkiWeb",
+   "description": "Sync the collection with AnkiWeb, so new cards reach the user's phone and reviews from the phone count.",
+   "inputSchema": {
+    "properties": {},
+    "title": "syncArguments",
+    "type": "object"
+   },
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true
+   }
+  },
+  {
+   "name": "draft_add",
+   "title": "Add cards to a draft",
+   "description": "Check cards against Anki and add them to a draft. Nothing is written to Anki.\n\nReturns the cards as text to show the user. If any card has a problem, none is added and every problem is listed.\n",
+   "inputSchema": {
+    "$defs": {
+     "CardIn": {
+      "properties": {
+       "fields": {
+        "additionalProperties": {
+         "type": "string"
+        },
+        "description": "Field name -> content (HTML), names exactly as overview lists them",
+        "title": "Fields",
+        "type": "object"
+       },
+       "tags": {
+        "default": [],
+        "items": {
+         "type": "string"
+        },
+        "title": "Tags",
+        "type": "array"
+       },
+       "note_type": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Only if it differs from the draft's note type",
+        "title": "Note Type"
+       },
+       "deck": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Only if it differs from the draft's deck",
+        "title": "Deck"
+       }
+      },
+      "required": [
+       "fields"
+      ],
+      "title": "CardIn",
+      "type": "object"
+     }
+    },
+    "properties": {
+     "cards": {
+      "items": {
+       "$ref": "#/$defs/CardIn"
+      },
+      "maxItems": 50,
+      "minItems": 1,
+      "title": "Cards",
+      "type": "array"
+     },
+     "draft_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Add to this draft. Without it a new draft is created",
+      "title": "Draft Id"
+     },
+     "deck": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "New draft: full deck name, e.g. 'Math::Analysis'",
+      "title": "Deck"
+     },
+     "note_type": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "New draft: note type, e.g. 'Basic'",
+      "title": "Note Type"
+     },
+     "tags": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "New draft: tags for all its cards",
+      "title": "Tags"
+     },
+     "title": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "New draft: a short name",
+      "title": "Title"
+     },
+     "allow_duplicate": {
+      "default": false,
+      "description": "Allow cards whose first field already exists",
+      "title": "Allow Duplicate",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "cards"
+    ],
+    "title": "draft_addArguments",
+    "type": "object"
+   },
+   "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "draft_add_occlusion",
+   "title": "Add an image occlusion card to a draft",
+   "description": "Add an Image Occlusion note (Anki 23.10+) to a draft. Each mask, or each group of masks, becomes one card.\n\nReturns the image with the masks drawn in. Check that every mask covers exactly its label.\n",
+   "inputSchema": {
+    "$defs": {
+     "MaskIn": {
+      "properties": {
+       "label": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Text on the image (a PDF word or a graph node) to hide",
+        "title": "Label"
+       },
+       "region": {
+        "anyOf": [
+         {
+          "items": {
+           "type": "number"
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "type": "array"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Area to hide instead of a label: [left, top, right, bottom] as fractions (0-1) of the image",
+        "title": "Region"
+       },
+       "group": {
+        "anyOf": [
+         {
+          "type": "integer"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Masks with the same group are asked together on one card",
+        "title": "Group"
+       }
+      },
+      "title": "MaskIn",
+      "type": "object"
+     }
+    },
+    "properties": {
+     "image": {
+      "description": "Image file name from stage_image or render_graph, e.g. 'heart.png'",
+      "title": "Image",
+      "type": "string"
+     },
+     "masks": {
+      "items": {
+       "$ref": "#/$defs/MaskIn"
+      },
+      "maxItems": 50,
+      "minItems": 1,
+      "title": "Masks",
+      "type": "array"
+     },
+     "header": {
+      "default": "",
+      "description": "Shown above the image, e.g. what to name",
+      "title": "Header",
+      "type": "string"
+     },
+     "back_extra": {
+      "default": "",
+      "description": "Shown below the image on the back",
+      "title": "Back Extra",
+      "type": "string"
+     },
+     "hide_all": {
+      "default": true,
+      "description": "True: all masks hidden, one asked. False: only the asked mask hidden",
+      "title": "Hide All",
+      "type": "boolean"
+     },
+     "draft_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Add to this draft. Without it a new draft is created",
+      "title": "Draft Id"
+     },
+     "deck": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "New draft: full deck name",
+      "title": "Deck"
+     },
+     "tags": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "New draft: tags for all its cards",
+      "title": "Tags"
+     },
+     "title": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "New draft: a short name",
+      "title": "Title"
+     }
+    },
+    "required": [
+     "image",
+     "masks"
+    ],
+    "title": "draft_add_occlusionArguments",
+    "type": "object"
+   },
+   "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "draft_edit",
+   "title": "Change cards in a draft",
+   "description": "Change or remove cards of a draft by number. Send only the fields that change; the others stay.\n\nReturns the changed cards as text to show the user.\n",
+   "inputSchema": {
+    "$defs": {
+     "EditIn": {
+      "properties": {
+       "card": {
+        "description": "Card number in the draft, e.g. 3 for #3",
+        "title": "Card",
+        "type": "integer"
+       },
+       "fields": {
+        "anyOf": [
+         {
+          "additionalProperties": {
+           "type": "string"
+          },
+          "type": "object"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Only the fields that change",
+        "title": "Fields"
+       },
+       "tags": {
+        "anyOf": [
+         {
+          "items": {
+           "type": "string"
+          },
+          "type": "array"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "Replaces the card's tags",
+        "title": "Tags"
+       },
+       "remove": {
+        "default": false,
+        "description": "Remove the card from the draft",
+        "title": "Remove",
+        "type": "boolean"
+       }
+      },
+      "required": [
+       "card"
+      ],
+      "title": "EditIn",
+      "type": "object"
+     }
+    },
+    "properties": {
+     "draft_id": {
+      "title": "Draft Id",
+      "type": "string"
+     },
+     "edits": {
+      "items": {
+       "$ref": "#/$defs/EditIn"
+      },
+      "minItems": 1,
+      "title": "Edits",
+      "type": "array"
+     }
+    },
+    "required": [
+     "draft_id",
+     "edits"
+    ],
+    "title": "draft_editArguments",
+    "type": "object"
+   },
+   "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "draft_show",
+   "title": "Show a draft",
+   "description": "Show the cards of a draft as text, or list the open drafts. Drafts survive restarts.",
+   "inputSchema": {
+    "properties": {
+     "draft_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Without it: list the open drafts",
+      "title": "Draft Id"
+     },
+     "cards": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "integer"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Only these card numbers",
+      "title": "Cards"
+     }
+    },
+    "title": "draft_showArguments",
+    "type": "object"
+   },
+   "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "draft_commit",
+   "title": "Add draft cards to Anki",
+   "description": "Add the cards the user approved to Anki. Missing decks are created. Returns a batch id for undo.\n\nCards that fail stay in the draft with the reason. The draft is deleted when no cards are left.\n",
+   "inputSchema": {
+    "properties": {
+     "draft_id": {
+      "title": "Draft Id",
+      "type": "string"
+     },
+     "cards": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "integer"
+        },
+        "minItems": 1,
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Only these card numbers. Without it: all cards",
+      "title": "Cards"
+     }
+    },
+    "required": [
+     "draft_id"
+    ],
+    "title": "draft_commitArguments",
+    "type": "object"
+   },
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "stats",
+   "title": "Study statistics",
+   "description": "How the collection is doing, and the notes the user struggles with most.\n\nHealth: card counts, reviews per day, true retention.\nWeak notes: ranked by again rate, lapses and FSRS difficulty, with flags that hint at the cause.\n",
+   "inputSchema": {
+    "properties": {
+     "scope": {
+      "default": "",
+      "description": "Anki search that limits the cards, e.g. 'deck:GAD'",
+      "title": "Scope",
+      "type": "string"
+     },
+     "days": {
+      "default": 60,
+      "maximum": 365,
+      "minimum": 1,
+      "title": "Days",
+      "type": "integer"
+     },
+     "weak_limit": {
+      "default": 25,
+      "description": "How many weak notes to list; 0 for none",
+      "maximum": 100,
+      "minimum": 0,
+      "title": "Weak Limit",
+      "type": "integer"
+     }
+    },
+    "title": "statsArguments",
+    "type": "object"
+   },
+   "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "youtube_transcript",
+   "title": "YouTube transcript",
+   "description": "Read the transcript of a YouTube video.\n\nA long video returns a timestamped outline instead; call again with 'intervals' to read the parts that matter.\n",
+   "inputSchema": {
+    "$defs": {
+     "TimeInterval": {
+      "properties": {
+       "start_sec": {
+        "description": "Start time in seconds",
+        "title": "Start Sec",
+        "type": "integer"
+       },
+       "end_sec": {
+        "description": "End time in seconds",
+        "title": "End Sec",
+        "type": "integer"
+       }
+      },
+      "required": [
+       "start_sec",
+       "end_sec"
+      ],
+      "title": "TimeInterval",
+      "type": "object"
+     }
+    },
+    "properties": {
+     "url": {
+      "title": "Url",
+      "type": "string"
+     },
+     "intervals": {
+      "anyOf": [
+       {
+        "items": {
+         "$ref": "#/$defs/TimeInterval"
+        },
+        "maxItems": 30,
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Intervals"
+     },
+     "language": {
+      "default": "en",
+      "description": "Transcript language code, e.g. 'de'",
+      "minLength": 2,
+      "title": "Language",
+      "type": "string"
+     }
+    },
+    "required": [
+     "url"
+    ],
+    "title": "youtube_transcriptArguments",
+    "type": "object"
+   },
+   "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true
+   }
+  }
+ ]
+}

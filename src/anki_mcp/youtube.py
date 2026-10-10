@@ -75,7 +75,10 @@ async def youtube_transcript(
     intervals: Annotated[list[TimeInterval] | None, Field(max_length=30)] = None,
     language: Annotated[str, Field(min_length=2, description="Transcript language code, e.g. 'de'")] = "en",
 ) -> str:
-    """Read the transcript of a YouTube video. Long videos return a timestamped outline; call again with 'intervals' to read the parts that matter."""
+    """Read the transcript of a YouTube video.
+
+    A long video returns a timestamped outline instead; call again with 'intervals' to read the parts that matter.
+    """
     key = (url, language)
     if key not in _videos:
         if len(_videos) >= MAX_CACHED_VIDEOS:

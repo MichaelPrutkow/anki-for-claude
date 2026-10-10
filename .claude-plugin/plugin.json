@@ -1,8 +1,8 @@
 {
   "name": "anki",
   "displayName": "Anki Flashcards",
-  "version": "2.0.1",
-  "description": "Create, review and improve Anki flashcards with Claude: card rules, a visual preview, images and image occlusion, weak-card statistics. Unofficial, not affiliated with Ankitects.",
+  "version": "2.1.0",
+  "description": "Create and improve Anki flashcards with Claude: card-writing rules, drafts you approve in the chat, pictures and image occlusion, and statistics on the cards you struggle with. Unofficial, not affiliated with Ankitects.",
   "author": {
     "name": "Michael Prutkow",
     "url": "https://github.com/MichaelPrutkow"

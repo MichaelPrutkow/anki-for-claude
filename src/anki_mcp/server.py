@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from importlib.metadata import version
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import httpx
 from mcp.server import MCPServer
@@ -18,14 +18,14 @@ if TYPE_CHECKING:
     from anki_mcp.anki import AnkiClient, NoteTypes
     from anki_mcp.collection import Journal
     from anki_mcp.drafts import DraftStore
-    from anki_mcp.media import MediaStore
-    from anki_mcp.preview import Preview
+    from anki_mcp.images import ImageStore
 
 INSTRUCTIONS = """\
-Tools for the user's real Anki collection. To write flashcards, follow the 'cards' skill.
-Workflow: overview -> draft_add -> review. review opens a preview, waits for the user, commits the
-accepted cards and returns the user's notes; apply them with draft_edit and call review again.
-Fix wrong cards with update_notes (keeps review history). Every change returns a batch id for undo.
+Tools for the user's own Anki collection. They run on the user's computer and can only open files there.
+New cards (follow the 'create-cards' skill): overview -> draft_add -> show the returned cards to the user ->
+draft_edit until they approve -> draft_commit. Nothing reaches Anki before draft_commit.
+Existing cards: search_notes, update_notes (keeps the review history), stats for the cards the user struggles with.
+Every change to the collection returns a batch id that undo reverts.
 """
 
 CREATED_TAG = "mcp::created"
@@ -34,7 +34,7 @@ BATCH_PREFIX = "mcp::batch::"
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
-def _annotations(read_only: bool, destructive: bool, idempotent: bool, web: bool = False):
+def _annotations(read_only: bool, destructive: bool, idempotent: bool, web: bool = False) -> ToolAnnotations:
     return ToolAnnotations(
         read_only_hint=read_only,
         destructive_hint=destructive,
@@ -44,12 +44,11 @@ def _annotations(read_only: bool, destructive: bool, idempotent: bool, web: bool
 
 
 READ_ONLY = _annotations(True, False, True)
-DRAFT_ONLY = _annotations(True, False, False)
-ADDS_NEW = _annotations(False, False, False)
+DRAFT = _annotations(True, False, False)  # changes drafts and images, never the collection
+ADDS = _annotations(False, False, False)
 OVERWRITES = _annotations(False, True, True)
 WEB_READ = _annotations(True, False, True, web=True)
 SYNC = _annotations(False, False, True, web=True)
-ASK_USER = {"anthropic/requiresUserInteraction": True}
 
 
 def _env(name: str) -> str | None:
@@ -62,9 +61,8 @@ class App:
     note_types: NoteTypes
     drafts: DraftStore
     journal: Journal
-    media: MediaStore
+    images: ImageStore
     roots: list[Path]  # folders where relative file names are looked up
-    preview: Preview | None = None
 
 
 Ctx = Context[App]
@@ -79,7 +77,7 @@ async def lifespan(server: MCPServer) -> AsyncGenerator[App, None]:
     from anki_mcp.anki import AnkiClient, NoteTypes
     from anki_mcp.collection import Journal
     from anki_mcp.drafts import DraftStore
-    from anki_mcp.media import MediaStore
+    from anki_mcp.images import ImageStore
 
     data_dir = Path(_env("CLAUDE_PLUGIN_DATA") or Path.home() / ".anki-mcp")
     data_dir.mkdir(parents=True, exist_ok=True)
@@ -87,24 +85,19 @@ async def lifespan(server: MCPServer) -> AsyncGenerator[App, None]:
     auto_launch = (_env("ANKI_AUTO_LAUNCH") or "true").lower() in {"1", "true", "yes", "on"}
     async with httpx.AsyncClient(timeout=30.0) as http:
         anki = AnkiClient(http, url, auto_launch)
-        state = App(
+        yield App(
             anki=anki,
             note_types=NoteTypes(anki),
             drafts=DraftStore(data_dir / "drafts"),
             journal=Journal(data_dir / "journal.jsonl"),
-            media=MediaStore(data_dir / "media"),
+            images=ImageStore(Path.home() / "Pictures" / "Anki for Claude"),
             roots=[Path(p).expanduser() for p in (_env("ANKI_WORKSPACE"), _env("CLAUDE_PROJECT_DIR")) if p],
         )
-        try:
-            yield state
-        finally:
-            if state.preview:
-                await state.preview.stop()
 
 
 mcp = MCPServer("anki", version=version("anki-for-claude"), instructions=INSTRUCTIONS, lifespan=lifespan)
 
 
-def tool(title: str, annotations: ToolAnnotations, meta: dict[str, Any] | None = None):
-    """Register a tool that returns plain text (or text + images)."""
-    return mcp.tool(title=title, annotations=annotations, meta=meta, structured_output=False)
+def tool(title: str, annotations: ToolAnnotations):
+    """Register a tool that returns plain text (or text and images)."""
+    return mcp.tool(title=title, annotations=annotations, structured_output=False)
