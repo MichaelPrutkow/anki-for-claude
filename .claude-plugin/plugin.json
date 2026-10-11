@@ -1,7 +1,7 @@
 {
   "name": "anki",
   "displayName": "Anki Flashcards",
-  "version": "2.1.5",
+  "version": "2.1.6",
   "description": "Create and improve Anki flashcards with Claude: card-writing rules, drafts you approve in the chat, pictures and image occlusion, and statistics on the cards you struggle with. Unofficial, not affiliated with Ankitects.",
   "author": {
     "name": "Michael Prutkow",
@@ -17,6 +17,9 @@
   ],
   "homepage": "https://github.com/MichaelPrutkow/anki-for-claude",
   "repository": "https://github.com/MichaelPrutkow/anki-for-claude",
+  "documentationUrl": "https://github.com/MichaelPrutkow/anki-for-claude#readme",
+  "supportUrl": "https://github.com/MichaelPrutkow/anki-for-claude/issues",
+  "privacyPolicyUrl": "https://github.com/MichaelPrutkow/anki-for-claude/blob/main/PRIVACY.md",
   "mcpServers": {
     "anki": {
       "command": "uv",
