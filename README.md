@@ -2,7 +2,7 @@
 
 # Anki for Claude
 
-**Turn your lecture material, YouTube videos or anything else in your chat into Anki cards.**
+Claude writes your Anki cards. From lecture slides, PDFs, YouTube videos or whatever's in the chat.
 
 [![Stars](https://img.shields.io/github/stars/MichaelPrutkow/anki-for-claude?style=flat&color=yellow)](https://github.com/MichaelPrutkow/anki-for-claude/stargazers)
 [![MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
@@ -10,38 +10,56 @@
 ![Anki 23.10+](https://img.shields.io/badge/Anki-23.10%2B-orange)
 ![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-3776AB)
 
-'Anki for Claude' is a Claude plugin that reads your lecture material, transcribes YouTube videos and writes Anki
-flashcards from it, including pictures and native image occlusion cards. It talks to your
-running Anki through [AnkiConnect](https://ankiweb.net/shared/info/2055492159).
+A Claude plugin that runs locally against your Anki. It reads your material, writes the cards,
+draws the diagrams and makes native image occlusion cards. Later it goes through your review
+history and fixes the cards you keep failing.
 
-Most LLM-to-Anki tools only take text, produce cards and write them. That produces a lot of
-cards and not much learning. This plugin has Claude write cards that are worth reviewing,
-grounded in your own material, shows them to you before anything is added, and later uses your
-review history to find and fix the cards that do not work.
+Nothing hits your collection until you say yes.
 
-> Unofficial. Not affiliated with or endorsed by Ankitects Pty Ltd.
+> Unofficial. Not affiliated with Ankitects Pty Ltd.
 
 ## Demo
 
-**Asking Claude for cards from a YouTube video combined with lecture slides**
+YouTube video + lecture slides in:
 
 https://github.com/user-attachments/assets/68d1f24f-7f6c-480d-aa16-c312484f873b
 
-**Output, clicked through in Anki**
+Cards out, clicked through in Anki:
 
 https://github.com/user-attachments/assets/00ac5217-9e81-4b8c-8479-c9aa38729dc4
 
-## Requirements
+## What's different
 
-- **Anki 23.10 or newer** with the [AnkiConnect](https://ankiweb.net/shared/info/2055492159)
-  add-on: in Anki, *Tools → Add-ons → Get Add-ons*, code `2055492159`, then restart Anki.
-- **[uv](https://docs.astral.sh/uv/)**, which starts the plugin's Python server: `brew install uv`
-  on macOS, otherwise see the [uv installation guide](https://docs.astral.sh/uv/getting-started/installation/).
+Most AI flashcard tools turn a PDF into 300 cards you'll never review. This one writes fewer
+cards, from your own material, and keeps fixing the ones that don't stick.
+
+- Cards follow actual rules. One fact per card, no yes/no questions, no lists (they become
+  clozes), and a theorem gets separate cards for statement, hypotheses and key idea. The wording
+  rules come from [Wikipedia: Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing),
+  so the cards don't read like an LLM wrote them.
+- You see every card word for word before it's added. Tell Claude what to change, approve, done.
+- Real pictures. Graphs, trees and automata via Graphviz. Figures cut out of your PDF by their
+  caption (*"Fig. 3.2"*). Plots via matplotlib. Native image occlusion, with masks placed from the
+  PDF's text layer or the graph's node positions instead of guessed from pixels.
+- Your review history decides what gets fixed. `stats` ranks notes by again rate, lapses, FSRS
+  difficulty, answer time, leeches and red flags. Flag a card red on your phone and Claude picks
+  it up next time.
+- A whole course in one go. `/anki:exam-prep` gives every source its own agent, so 200 pages of
+  slides never touch your context. You approve a topic blueprint weighted by past exams, the cards
+  get written in parallel, audited, and approved topic by topic.
+- Everything is undoable. Every commit and edit returns a batch id, `undo` reverts it.
+
+## Setup
+
+You need:
+
+- **Anki 23.10+** with [AnkiConnect](https://ankiweb.net/shared/info/2055492159):
+  *Tools → Add-ons → Get Add-ons*, code `2055492159`, restart Anki.
+- **[uv](https://docs.astral.sh/uv/)**: `brew install uv`, or see the
+  [install guide](https://docs.astral.sh/uv/getting-started/installation/).
 - **Claude Code** or the **Claude desktop app**.
-- Optional: **[Graphviz](https://graphviz.org/download/)** for drawn graphs, trees and automata
+- Optional: **[Graphviz](https://graphviz.org/download/)** for graphs, trees and automata
   (`brew install graphviz`).
-
-## Install
 
 **Claude Code**
 
@@ -50,152 +68,117 @@ https://github.com/user-attachments/assets/00ac5217-9e81-4b8c-8479-c9aa38729dc4
 /plugin install anki@michaelprutkow
 ```
 
-**Claude desktop app:** *Customize → Plugins → Add → Add marketplace*, enter
-`MichaelPrutkow/anki-for-claude`, then install **Anki Flashcards**.
+**Desktop app:** *Customize → Plugins → Add → Add marketplace*, enter
+`MichaelPrutkow/anki-for-claude`, install **Anki Flashcards**.
 
-The first start takes a few seconds while uv installs the dependencies. Then ask Claude to
-*"check my Anki setup"*.
+Then say *"check my Anki setup"*. First start takes a few seconds while uv pulls the dependencies.
 
-In the desktop app, **add a folder to the chat before you send the first message**, for example
-the folder with your lecture material. The plugin's server runs on your computer, and such servers
-work in Claude Code and Cowork but not in a plain chat; with a folder, the chat reliably reaches
-them. Claude needs the folder anyway to read your PDFs.
+In the desktop app, add a folder to the chat before your first message (your lecture folder, for
+example). The server runs on your machine, and without a folder the chat doesn't reliably reach
+it. Claude needs the folder for your PDFs anyway.
 
-Nothing needs to be configured. The plugin talks to AnkiConnect on `http://127.0.0.1:8765` and
-starts Anki when it is not running (macOS only).
+No config. It uses AnkiConnect on `http://127.0.0.1:8765` and launches Anki if it's closed
+(macOS).
 
 ## Usage
 
-Ask for cards: *"Make flashcards from this lecture for my deck Analysis 2."* Claude writes them
-into a draft and shows every card in the chat. You say what to change, and only after you say
-yes are they added to Anki.
+*"Make flashcards from this lecture for my deck Analysis 2."*
 
-| Skill | What it is for |
+Claude drafts, you review in the chat, it commits when you say yes. That's the loop.
+
+| Skill | For |
 | --- | --- |
-| `/anki:create-cards` | Writing cards from any material: the card rules and the workflow |
-| `/anki:visuals` | Cards with pictures: Graphviz graphs, figures cut from PDFs, plots, image occlusion |
-| `/anki:improve-cards` | Finding your weakest cards and fixing, searching, deleting or undoing cards |
-| `/anki:exam-prep` | Turning a whole course (slides, exercise sheets, past exams) into a prioritised deck |
-| `/anki:check-setup` | Checking Anki, AnkiConnect, the image occlusion note type and Graphviz |
+| `/anki:create-cards` | Cards from any material |
+| `/anki:visuals` | Graphs, PDF figures, plots, image occlusion |
+| `/anki:improve-cards` | Find and fix weak cards, search, delete, undo |
+| `/anki:exam-prep` | A whole course (slides, exercise sheets, past exams) into a prioritised deck |
+| `/anki:check-setup` | Check Anki, AnkiConnect, the image occlusion note type and Graphviz |
 
-Claude picks the right skill on its own; the slash commands are there to force one.
+Claude picks the skill itself. The slash commands are there to force one.
 
-Flag a bad card red while you study on your phone. The next time you ask Claude to improve your
-cards, it picks it up. If you want that regularly, schedule a prompt such as *"improve my
-weakest cards in Analysis 2"* as a task in the Claude desktop app.
+- Want it on autopilot? Schedule *"improve my weakest cards in Analysis 2"* as a task in the
+  desktop app.
+- PDFs and images are opened by their full path. A file you attach in the desktop app isn't on
+  disk yet, so Claude saves it first or asks you for the path.
 
-PDFs and images are opened from your computer by their full path. A file you attach to a chat in
-the desktop app is not on your computer yet: Claude saves it there first or asks you for the path.
+## Under the hood
 
-## How it works
-
-**Nothing is added until you approve it.** Cards go into a draft first, which is checked against
-your note types and for duplicates. Claude shows you every card word for word, changes single
-cards on request, and adds only the cards you approve. Drafts are saved on disk, so they survive
-restarts.
-
-**Pictures where the exam has pictures.** Graphs, trees and automata are drawn with Graphviz in
-one consistent style. Figures from your PDFs are found with their captions (e.g. *"Fig. 3.2"*) and
-cut out exactly. Plots are drawn with matplotlib. Image occlusion notes are Anki's native ones,
-and their masks are placed through the PDF's text layer or the graph's node positions, not
-guessed from pixels. Pictures are saved in `~/Pictures/Anki for Claude`, so you can look at them
-while you review the cards; image occlusion cards also get a `<name>-masks.png` that shows the
-masks.
-
-**Card rules that are loaded only when needed.** The rules live in a skill, so they cost nothing
-in other conversations. One fact per card, no yes/no questions, no lists (they become separate
-cloze deletions), separate cards for a theorem's statement, hypotheses and key idea, and wording
-rules inspired by [Wikipedia: Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing).
-The tools also catch the most common formatting slips: LaTeX outside `\( \)`, `$...$` math that
-Anki does not render, a `<` inside a formula, and braces that end a cloze too early.
-
-**Your review history decides what to fix.** `stats` ranks the notes you struggle with by again
-rate, lapses, FSRS difficulty, answer time, leeches and red flags, with a hint at the cause.
-Claude proposes the fix (split the card, sharpen the question, add a picture or a prerequisite
-card) and changes nothing until you approve it.
-
-**Everything can be undone.** Every commit and every edit returns a batch id, and `undo` removes
-the added cards or restores the changed fields. A card you edited yourself in the meantime is
-left alone. Cards the plugin did not create cannot be deleted by it and are only edited after
-you agree.
-
-**A whole course at once.** `/anki:exam-prep` analyses each source with its own agent, so 200
-pages of slides never fill your conversation, lets you approve a blueprint of topics weighted by
-past exams, writes the cards in parallel, checks them against the rules and has you approve them
-topic by topic.
-
-**Compact output.** Tools answer in short plain text: what happened, the data, the next step.
-Long YouTube videos come back as a timestamped outline, and Claude reads only the parts it needs.
+- Drafts are saved to disk, so they survive restarts. Every card is checked against your note
+  types and for duplicates before you see it.
+- The tools catch the usual formatting slips: LaTeX outside `\( \)`, `$...$` math Anki won't
+  render, a `<` inside a formula, braces that close a cloze too early.
+- Pictures land in `~/Pictures/Anki for Claude`, so you can look at them while reviewing. Image
+  occlusion cards also get a `<name>-masks.png` that shows the masks.
+- The card rules live in a skill, so they cost nothing in chats that aren't about Anki.
+- Tool output is short plain text. Long YouTube videos come back as a timestamped outline, and
+  Claude only pulls the parts it needs.
+- `undo` skips cards you edited yourself in the meantime. Cards the plugin didn't create can't be
+  deleted by it and are only edited after you agree.
 
 ## Tools
 
 | Tool | Access | What it does |
 | --- | --- | --- |
-| `overview` | read | Decks with card counts, note types with their exact field names |
+| `overview` | read | Decks, card counts, note types and their exact field names |
 | `search_notes` | read | Search with Anki's query syntax, one line per note |
 | `draft_add` | draft | Check cards and add them to a draft |
-| `draft_add_occlusion` | draft | Add an image occlusion note, masks by label or region |
+| `draft_add_occlusion` | draft | Image occlusion note, masks by label or region |
 | `draft_edit` | draft | Change or remove draft cards by number |
-| `draft_show` | read | Show a draft's cards, or list the open drafts |
+| `draft_show` | read | Show a draft, or list the open ones |
 | `stage_image` | draft | Save an image, a PDF figure or part of a PDF page for a card |
 | `pdf_figures` | read | Find figures and their captions in a PDF |
 | `render_graph` | draft | Draw a graph, tree or automaton with Graphviz |
-| `stats` | read | Card counts, retention, and the cards you struggle with |
+| `stats` | read | Card counts, retention and the cards you struggle with |
 | `youtube_transcript` | web | Transcript or outline of a YouTube video |
-| `draft_commit` | **write** | Add the approved cards to Anki, creating missing decks |
+| `draft_commit` | **write** | Add the approved cards, create missing decks |
 | `update_notes` | **write** | Fix cards without losing their review history |
 | `undo` | **write** | Revert a commit or an edit by its batch id |
 | `delete_notes` | **write** | Delete notes this plugin created |
 | `sync` | **write** | Sync with AnkiWeb so the cards reach your phone |
 
-*Draft* tools change only drafts and pictures, never your collection.
+*Draft* tools only touch drafts and pictures, never your collection.
 
 ## Safety
 
-> **Back up first.** This plugin writes to your real collection. Make a backup before the first
-> run: *File → Export → Anki Collection Package*.
+> **Back up first.** This writes to your real collection: *File → Export → Anki Collection Package*.
 
-The plugin will not:
+It won't:
 
-- add cards you did not approve in the chat,
-- delete a note it did not create,
-- edit a note it did not create without your consent,
-- open files other than images and PDFs.
+- add cards you didn't approve in the chat
+- delete a note it didn't create
+- edit a note it didn't create without asking
+- open anything except images and PDFs
 
-## Privacy and data
+## Privacy
 
-Everything runs on your computer, and nothing is sent to the author of this plugin.
+Runs on your machine. Nothing is sent to me.
 
-- **Anki:** the plugin talks to AnkiConnect on `127.0.0.1`.
-- **Stored on your computer:** drafts (deleted after 14 days without changes) and the undo
-  journal in `~/.anki-mcp`, pictures in `~/Pictures/Anki for Claude` until you
-  delete them.
-- **Sent elsewhere, only when you ask for it:** the video id to YouTube for a transcript, a
-  request to the web address of an image you want on a card, and your collection to AnkiWeb
-  when Anki syncs.
-- **Programs it starts:** Anki, when it is not running (macOS), and Graphviz's `dot` to draw
-  graphs.
+- **Anki:** AnkiConnect on `127.0.0.1`.
+- **Stored locally:** drafts (deleted after 14 days untouched) and the undo journal in
+  `~/.anki-mcp`, pictures in `~/Pictures/Anki for Claude` until you delete them.
+- **Only when you ask:** the video id goes to YouTube for a transcript, an image URL you want on a
+  card gets fetched, and Anki syncs your collection to AnkiWeb.
+- **Programs it starts:** Anki if it's closed (macOS), and Graphviz's `dot` for graphs.
+
+Full policy: [PRIVACY.md](PRIVACY.md).
 
 ## Known limits
 
-- **No dialog window may be open in Anki.** A modal blocks AnkiConnect, and every call times out
-  until you close it.
-- **Claude Code and Cowork only.** The plugin's server runs on your computer, and a plain chat,
-  including claude.ai in the browser, cannot reach it. In the desktop app, add a folder to the chat
-  before the first message.
-- **Anki starts automatically on macOS only.** On Windows and Linux, you must open it yourself.
-- **Duplicates are detected the way Anki does it:** only the first field is compared, so two cards
-  with the same question count as duplicates.
-- **Deleting cannot be undone.** Prefer fixing a card over deleting it.
-- **Image occlusion uses rectangles**, and placing masks by label needs a PDF text layer or a
-  Graphviz graph. For other images, Claude places them by region.
-- **FSRS difficulty is read from the review log**, because AnkiConnect does not expose FSRS
-  memory states. That is precise enough for ranking.
+- An open dialog in Anki blocks AnkiConnect. Every call times out until you close it.
+- Claude Code and Cowork only. The server runs locally, so a plain chat (including claude.ai in
+  the browser) can't reach it.
+- Anki auto-starts on macOS only. On Windows and Linux, open it yourself.
+- Duplicates work like in Anki: only the first field is compared.
+- Deleting can't be undone. Fix a card instead.
+- Image occlusion is rectangles only. Masks by label need a PDF text layer or a Graphviz graph,
+  otherwise Claude places them by region.
+- FSRS difficulty is read from the review log, because AnkiConnect doesn't expose FSRS memory
+  states. Good enough for ranking.
 
 ## Other MCP clients
 
-The MCP server also runs without the plugin, for example in Cursor. You get the tools then, but
-not the skills and agents.
+The MCP server works without the plugin too, e.g. in Cursor. You get the tools, not the skills
+and agents.
 
 ```bash
 git clone https://github.com/MichaelPrutkow/anki-for-claude.git
@@ -218,15 +201,15 @@ uv sync --no-dev
 
 ```bash
 uv sync
-uv run pytest            # the tools against an in-memory fake of AnkiConnect, no Anki needed
-claude plugin eval .     # Claude with the plugin against mocked tools, compared with Claude without it
+uv run pytest            # tools against an in-memory fake of AnkiConnect, no Anki needed
+claude plugin eval .     # Claude with the plugin vs. without it, against mocked tools
 claude --plugin-dir .    # try it in Claude Code
 ```
 
 ## Credits
 
-- [AnkiConnect](https://git.sr.ht/~foosoft/anki-connect) by foosoft, the add-on this talks to
+- [AnkiConnect](https://git.sr.ht/~foosoft/anki-connect) by foosoft
 - [youtube-transcript-api](https://github.com/jdepoix/youtube-transcript-api) by jdepoix
 - [pdfplumber](https://github.com/jsvine/pdfplumber), [Pillow](https://python-pillow.org) and
   [Graphviz](https://graphviz.org) for the pictures
-- The [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk)
+- [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk)
